@@ -29,8 +29,11 @@ if (args.config) {
     nodeConfig.onStart : global.nodeConfig.onStart;
 }
 
-// TODO
+// add any global imports here (ie. fs, path, http, etc)
 const distribution = {};
+distribution.local = require('./distribution/local/local');
+distribution.util = require('./distribution/util/util');
+distribution.node = require('./distribution/local/node');
 
 distribution.all = {};
 distribution.all.status = require('./distribution/all/status')({gid: 'all'});
@@ -40,6 +43,7 @@ distribution.all.groups = require('./distribution/all/groups')({gid: 'all'});
 distribution.all.routes = require('./distribution/all/routes')({gid: 'all'});
 distribution.all.mem = require('./distribution/all/mem')({gid: 'all'});
 distribution.all.store = require('./distribution/all/store')({gid: 'all'});
+distribution.all.mr = require('./distribution/all/mr')({gid: 'all'});
 
 global.distribution = distribution;
 

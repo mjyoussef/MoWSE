@@ -7,6 +7,7 @@ status    Information about the current group    get, stop, spawn
 gossip    Status and information dissemination   send, at, del
 mem       An ephemeral (in-memory) store         get, put, del
 store     A persistent store                     get, put, del
+mr        MapReduce service                      TBA
 */
 
 /* Comm Service */
@@ -20,6 +21,9 @@ const mem = require('./mem');
 
 /* Store Service */
 const store = require('./store');
+
+/* MapReduce Service */
+const mr = require('./mr');
 
 /* Routes Service */
 const routes = require('./routes');
@@ -38,4 +42,5 @@ module.exports = {
   gossip: gossip,
   mem: mem,
   store: store,
+  mr: mr,
 };
