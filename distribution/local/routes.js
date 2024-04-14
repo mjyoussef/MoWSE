@@ -24,13 +24,13 @@ routes.get = (name, cb) => {
     let service = routesStore[name];
     cb(null, service);
   } else {
-    cb(new Error("Service not found in routes"), null);
-    // const globalLookup = global.toLocal.get(name);
-    // if (globalLookup) {
-    //   cb(null, { call: globalLookup });
-    // } else {
-    //   cb(new Error("Service not found in routes"));
-    // }
+    // cb(new Error("Service not found in routes"), null);
+    const globalLookup = global.toLocal.get(name);
+    if (globalLookup) {
+      cb(null, globalLookup);
+    } else {
+      cb(new Error("Service not found in routes"));
+    }
   }
 };
 
