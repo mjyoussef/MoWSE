@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const args = require('yargs').argv;
 const util = require('./distribution/util/util.js');
+const args = require('yargs').argv;
 
 // Default configuration
 global.nodeConfig = global.nodeConfig || {
@@ -12,6 +12,13 @@ global.nodeConfig = global.nodeConfig || {
   },
 };
 
+/*
+    As a debugging tool, you can pass ip and port arguments directly.
+    This is just to allow for you to easily startup nodes from the terminal.
+
+    Usage:
+    ./distribution.js --ip '127.0.0.1' --port 1234
+  */
 if (args.ip) {
   global.nodeConfig.ip = args.ip;
 }
@@ -21,35 +28,25 @@ if (args.port) {
 }
 
 if (args.config) {
-  const nodeConfig = util.deserialize(args.config);
+  let nodeConfig = util.deserialize(args.config);
   global.nodeConfig.ip = nodeConfig.ip ? nodeConfig.ip : global.nodeConfig.ip;
   global.nodeConfig.port = nodeConfig.port ?
-    nodeConfig.port : global.nodeConfig.port;
+        nodeConfig.port : global.nodeConfig.port;
   global.nodeConfig.onStart = nodeConfig.onStart ?
-    nodeConfig.onStart : global.nodeConfig.onStart;
+        nodeConfig.onStart : global.nodeConfig.onStart;
 }
 
-// add any global imports here (ie. fs, path, http, etc)
-const distribution = {};
-distribution.local = require('./distribution/local/local');
-distribution.util = require('./distribution/util/util');
-distribution.node = require('./distribution/local/node');
-
-distribution.all = {};
-distribution.all.status = require('./distribution/all/status')({gid: 'all'});
-distribution.all.comm = require('./distribution/all/comm')({gid: 'all'});
-distribution.all.gossip = require('./distribution/all/gossip')({gid: 'all'});
-distribution.all.groups = require('./distribution/all/groups')({gid: 'all'});
-distribution.all.routes = require('./distribution/all/routes')({gid: 'all'});
-distribution.all.mem = require('./distribution/all/mem')({gid: 'all'});
-distribution.all.store = require('./distribution/all/store')({gid: 'all'});
-distribution.all.mr = require('./distribution/all/mr')({gid: 'all'});
+const distribution = {
+  util: require('./distribution/util/util.js'),
+  local: require('./distribution/local/local.js'),
+  node: require('./distribution/local/node.js'),
+};
 
 global.distribution = distribution;
+
+module.exports = distribution;
 
 /* The following code is run when distribution.js is run directly */
 if (require.main === module) {
   distribution.node.start(global.nodeConfig.onStart);
 }
-
-module.exports = global.distribution;
