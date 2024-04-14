@@ -82,7 +82,7 @@ const start = function (onStart) {
         return;
       }
 
-      body = JSON.parse(body);
+      // body = JSON.parse(body);
       body = serialization.deserialize(body);
       let args = body;
 
