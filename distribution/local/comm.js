@@ -1,6 +1,5 @@
-const http = require("http");
-
-const serialization = require("../util/serialization");
+const http = require('http');
+const serialization = require('../util/serialization');
 
 const comm = {};
 
@@ -24,7 +23,7 @@ comm.send = (message, remote, cb) => {
     remoteMethod === undefined ||
     remoteNode === undefined
   ) {
-    const e = new Error("remote node is invalid");
+    const e = new Error('remote node is invalid');
     if (cb) {
       cb(e, undefined);
     }
@@ -34,14 +33,14 @@ comm.send = (message, remote, cb) => {
   const data = serialization.serialize(message);
 
   const options = {
-    method: "PUT",
+    method: 'PUT',
     host: remoteNode.ip,
     port: remoteNode.port,
     path: `/${remoteService}/${remoteMethod}`,
   };
 
   const req = http.request(options, (res) => {
-    let responseData = "";
+    let responseData = '';
 
     if (res.statusCode >= 400) {
       const e = new Error(`error sending message: ${res.statusCode}`);
@@ -49,11 +48,11 @@ comm.send = (message, remote, cb) => {
       return;
     }
 
-    res.on("data", (chunk) => {
+    res.on('data', (chunk) => {
       responseData += chunk.toString();
     });
 
-    res.on("end", () => {
+    res.on('end', () => {
       // Handle the response data
       // console.log(responseData);
       const deserializedData = serialization.deserialize(responseData);
@@ -66,10 +65,10 @@ comm.send = (message, remote, cb) => {
     });
   });
 
-  req.on("error", (error) => {
+  req.on('error', (error) => {
     // Handle errors
     if (cb) {
-      cb(error, undefined);
+      cb(new Error(error.message), undefined);
     }
   });
 

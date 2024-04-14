@@ -12,7 +12,8 @@ function getID(obj) {
 function getNID(node) {
   const hash = crypto.createHash('sha256');
   hash.update(serialization.serialize(node));
-  return hash.digest('hex');
+  const x = hash.digest('hex');
+  return x;
 }
 
 // The SID is the first 5 characters of the NID

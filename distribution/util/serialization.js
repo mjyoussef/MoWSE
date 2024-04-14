@@ -1,5 +1,5 @@
 function serialize(object) {
-  const que = [[globalThis, ""]];
+  const que = [[globalThis, '']];
   const visitedObj = new WeakMap();
   const stringMap = new WeakMap();
   while (que.length !== 0) {
@@ -10,12 +10,12 @@ function serialize(object) {
     const keys = Reflect.ownKeys(obj);
     for (var i = 0; i < keys.length; i++) {
       const key = keys[i];
-      if (typeof key === "string") {
+      if (typeof key === 'string') {
         const val = obj[keys[i]];
-        if (typeof val === "function") {
-          stringMap.set(val, base + "." + key);
+        if (typeof val === 'function') {
+          stringMap.set(val, base + '.' + key);
         } else if (
-          typeof val === "object" &&
+          typeof val === 'object' &&
           val !== null &&
           !visitedObj.has(val)
         ) {
@@ -26,41 +26,41 @@ function serialize(object) {
   }
 
   function serializePrimitive(input) {
-    if (typeof input === "number") {
-      return { type: "number", value: input };
-    } else if (typeof input === "string") {
-      return { type: "string", value: input };
-    } else if (typeof input === "boolean") {
-      return { type: "boolean", value: input.toString() };
+    if (typeof input === 'number') {
+      return {type: 'number', value: input};
+    } else if (typeof input === 'string') {
+      return {type: 'string', value: input};
+    } else if (typeof input === 'boolean') {
+      return {type: 'boolean', value: input.toString()};
     } else if (input === null) {
-      return { type: "null" };
+      return {type: 'null'};
     } else if (input === undefined) {
-      return { type: "undefined" };
+      return {type: 'undefined'};
     } else {
       return -1;
     }
   }
   function serializeDate(input) {
     if (input instanceof Date) {
-      return { type: "Date", value: input.getTime() };
+      return {type: 'Date', value: input.getTime()};
     } else {
       return -1;
     }
   }
   function serializeError(input) {
     if (input instanceof Error) {
-      return { type: "Error", message: input.message, stack: input.stack };
+      return {type: 'Error', message: input.message, stack: input.stack};
     } else {
       return -1;
     }
   }
   function serializeFunc(input) {
-    if (typeof input === "function") {
+    if (typeof input === 'function') {
       const s = input.toString();
-      if (s.includes("[native code]")) {
-        return { type: "Function", value: stringMap.get(input) };
+      if (s.includes('[native code]')) {
+        return {type: 'Function', value: stringMap.get(input)};
       }
-      return { type: "Function", value: s };
+      return {type: 'Function', value: s};
     } else {
       return -1;
     }
@@ -71,18 +71,18 @@ function serialize(object) {
       for (var i = 0; i < input.length; i++) {
         values.push(controller(input[i]));
       }
-      return { type: "Array", value: values };
+      return {type: 'Array', value: values};
     } else {
       return -1;
     }
   }
   function clean(input) {
     var skip = true;
-    return function (key, val) {
-      if (!skip && typeof val === "object" && input == val) {
-        return "[Circular]";
+    return function(key, val) {
+      if (!skip && typeof val === 'object' && input == val) {
+        return '[Circular]';
       } else if (
-        typeof val === "function" ||
+        typeof val === 'function' ||
         val instanceof Error ||
         input[key] instanceof Date
       ) {
@@ -95,21 +95,21 @@ function serialize(object) {
     };
   }
   function serializeObject(input) {
-    if (typeof input === "object") {
+    if (typeof input === 'object') {
       const cleaned = JSON.parse(JSON.stringify(input, clean(input)));
       const values = {};
       for (var [k, v] of Object.entries(cleaned)) {
         if (
-          typeof v === "object" &&
+          typeof v === 'object' &&
           v !== null &&
-          (v.type === "Function" || v.type === "Error" || v.type === "Date")
+          (v.type === 'Function' || v.type === 'Error' || v.type === 'Date')
         ) {
           values[k] = v;
         } else {
           values[k] = controller(v);
         }
       }
-      return { type: "Object", value: values };
+      return {type: 'Object', value: values};
     }
   }
 
@@ -142,7 +142,7 @@ function serialize(object) {
   }
   const output = controller(object);
   if (output === -1) {
-    throw new Error("ERROR: Serialization failed!");
+    throw new Error('ERROR: Serialization failed!');
   }
   return JSON.stringify(output);
 }
@@ -151,15 +151,15 @@ function deserialize(string) {
   const seen = {};
 
   function buildPrimitive(data) {
-    if (data.type === "number") {
+    if (data.type === 'number') {
       return parseFloat(data.value);
-    } else if (data.type === "string") {
+    } else if (data.type === 'string') {
       return data.value;
-    } else if (data.type === "boolean") {
-      return data.value === "true";
-    } else if (data.type === "null") {
+    } else if (data.type === 'boolean') {
+      return data.value === 'true';
+    } else if (data.type === 'null') {
       return null;
-    } else if (data.type === "undefined") {
+    } else if (data.type === 'undefined') {
       return undefined;
     } else {
       return -1;
@@ -167,7 +167,7 @@ function deserialize(string) {
   }
 
   function buildDate(data) {
-    if (data.type === "Date") {
+    if (data.type === 'Date') {
       return new Date(parseInt(data.value));
     } else {
       return -1;
@@ -175,7 +175,7 @@ function deserialize(string) {
   }
 
   function buildError(data) {
-    if (data.type === "Error") {
+    if (data.type === 'Error') {
       return new Error(data.message, data.stack);
     } else {
       return -1;
@@ -183,20 +183,20 @@ function deserialize(string) {
   }
 
   function buildFunc(data) {
-    if (data.type === "Function") {
-      return new Function("return " + data.value)();
+    if (data.type === 'Function') {
+      return new Function('return ' + data.value)();
     } else {
       return -1;
     }
   }
 
   function buildArray(data, obj = null) {
-    if (data.type === "Array") {
+    if (data.type === 'Array') {
       const arr = [];
       for (var i = 0; i < data.value.length; i++) {
         if (
-          data.value[i].type === "string" &&
-          data.value[i].value === "[Circular]" &&
+          data.value[i].type === 'string' &&
+          data.value[i].value === '[Circular]' &&
           obj !== null
         ) {
           arr.push(obj);
@@ -211,10 +211,10 @@ function deserialize(string) {
   }
 
   function buildObject(data, obj = null) {
-    if (data.type === "Object") {
+    if (data.type === 'Object') {
       const obj = {};
       for (var [k, v] of Object.entries(data.value)) {
-        if (k === "self" && typeof v === "object") {
+        if (k === 'self' && typeof v === 'object') {
           obj.self = obj;
         } else {
           obj[k] = parser(v, obj);
@@ -257,10 +257,9 @@ function deserialize(string) {
     return -1;
   }
 
-  console.log(string);
   const output = parser(JSON.parse(string));
   if (output === -1) {
-    throw new Error("ERROR: Deserialization failed!");
+    throw new Error('ERROR: Deserialization failed!');
   }
   return output;
 }
