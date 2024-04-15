@@ -257,7 +257,6 @@ function deserialize(string) {
     return -1;
   }
 
-  console.log(string);
   const output = parser(JSON.parse(string));
   if (output === -1) {
     throw new Error('ERROR: Deserialization failed!');

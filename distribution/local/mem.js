@@ -1,5 +1,3 @@
-const util = global.distribution.util;
-
 // mapping mimicks a filesystem
 // each "level" of mapping has a dedicated 'subdirs' field
 // that stores subdirectories

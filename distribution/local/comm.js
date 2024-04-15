@@ -1,5 +1,6 @@
-const http = require('http');
-const serialization = require('../util/serialization');
+const http = global.distribution.http;
+const serialize = global.distribution.util.serialize;
+const deserialize = global.distribution.util.deserialize;
 
 const comm = {};
 
@@ -30,7 +31,7 @@ comm.send = (message, remote, cb) => {
     return;
   }
 
-  const data = serialization.serialize(message);
+  const data = serialize(message);
 
   const options = {
     method: 'PUT',
@@ -55,7 +56,7 @@ comm.send = (message, remote, cb) => {
     res.on('end', () => {
       // Handle the response data
       // console.log(responseData);
-      const deserializedData = serialization.deserialize(responseData);
+      const deserializedData = deserialize(responseData);
       if (deserializedData instanceof Error) {
         cb(deserializedData, undefined);
         return;

@@ -36,14 +36,16 @@ if (args.config) {
         nodeConfig.onStart : global.nodeConfig.onStart;
 }
 
-const distribution = {
-  util: require('./distribution/util/util.js'),
-  local: require('./distribution/local/local.js'),
-  node: require('./distribution/local/node.js'),
-  dir: __dirname,
-};
+global.distribution = {};
 
-global.distribution = distribution;
+// important modules
+global.distribution.dir = __dirname;
+global.distribution.fs = require('fs');
+global.distribution.path = require('path');
+global.distribution.http = require('http');
+global.distribution.util = require('./distribution/util/util');
+global.distribution.local = require('./distribution/local/local.js');
+global.distribution.node = require('./distribution/local/node.js');
 
 module.exports = distribution;
 
