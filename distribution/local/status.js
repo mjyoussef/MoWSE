@@ -8,8 +8,8 @@ const wire = require('../util/wire.js');
 const status = {};
 
 global.moreStatus = {
-  sid: id.getSID(global.nodeConfig),
-  nid: id.getNID(global.nodeConfig),
+  sid: id.getSID({ip: global.nodeConfig.ip, port: global.nodeConfig.port}),
+  nid: id.getNID({ip: global.nodeConfig.ip, port: global.nodeConfig.port}),
   counts: 0,
 };
 

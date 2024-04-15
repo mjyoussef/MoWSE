@@ -27,7 +27,7 @@ routes.get = (name, cb) => {
     // cb(new Error("Service not found in routes"), null);
     const globalLookup = global.toLocal.get(name);
     if (globalLookup) {
-      cb(null, globalLookup);
+      cb(null, {call: globalLookup});
     } else {
       cb(new Error('Service not found in routes'));
     }

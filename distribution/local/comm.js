@@ -1,5 +1,4 @@
 const http = require('http');
-
 const serialization = require('../util/serialization');
 
 const comm = {};
@@ -69,7 +68,7 @@ comm.send = (message, remote, cb) => {
   req.on('error', (error) => {
     // Handle errors
     if (cb) {
-      cb(error, undefined);
+      cb(new Error(error.message), undefined);
     }
   });
 

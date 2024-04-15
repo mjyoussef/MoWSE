@@ -28,7 +28,7 @@ function isValidBody(body) {
 const start = function(onStart) {
   const server = http.createServer((req, res) => {
     /* Your server will be listening for PUT requests. */
-
+    global.server = server;
     // Write some code...
 
     if (req.method !== 'PUT') {
