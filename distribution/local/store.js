@@ -75,39 +75,30 @@ store.get = (key, root, cb) => {
   });
 };
 
-store.put = (value, key, directory, cb) => {
-  // use the value's hash if the key is null
-  key = key === null ? util.id.getID(value) : key;
-
-  // if the key is for a specific group, update the group's keys
-  if (key.hasOwnProperty('gid')) {
-    // get the keys for key.gid
-    let keys = [];
-    if (gidMapping.has(key.gid)) {
-      keys = gidMapping.get(key.gid);
-    }
-
-    // replace the old key
-    let filteredKeys = keys.filter((elt) => elt !== key.key);
-    filteredKeys.push(key.key);
-    gidMapping.set(key.gid, filteredKeys);
+store.put = (value, key, root, cb) => {
+  // get the directory path
+  let dirPath = path.join(dir, root);
+  if (typeof key === 'object') {
+    dirPath = path.join(filePath, key.gid);
+    key = key.key;
   }
 
-  // if the key is an object, use its hash
-  key = typeof key === 'object' ? util.id.getID(key) : key;
-
-  // make the directory if it does not exist
-  const dirPath = path.join(dir, directory);
+  // make sure the directory path exists
   fs.mkdirSync(dirPath, {recursive: true});
 
-  // serialize and write value
-  const data = util.serialize(value);
+  // use hash of value as key if the input key is undefined
+  key = key === undefined ? util.id.getID(value) : key;
+
+  // append the file's name
   const filePath = path.join(dirPath, `${key}.txt`);
-  fs.writeFile(filePath, data, (error) => {
+
+  // write to the file (overwrite existing key if needed)
+  fs.writeFile(filePath, util.serialize(value), (error) => {
     let e = undefined;
     let v = undefined;
+
     if (error) {
-      e = new Error(`Error from local.store.put: problem writing to ${filePath}`);
+      e = new Error(`Error from local.store.put: failed to write to file`);
     } else {
       v = value;
     }
@@ -118,45 +109,45 @@ store.put = (value, key, directory, cb) => {
   });
 };
 
-store.del = (key, directory, cb) => {
-  // remove from group if applicable
-  if (key.hasOwnProperty('gid')) {
-    if (gidMapping.has(key.gid)) {
-      const filteredValues =
-        gidMapping.get(key.gid).filter((elt) => elt !== key.key);
-      gidMapping.set(key.gid, filteredValues);
-    }
+store.del = (key, root, cb) => {
+  // get the directory path
+  let dirPath = path.join(dir, root);
+  if (typeof key === 'object') {
+    dirPath = path.join(filePath, key.gid);
+    key = key.key;
   }
 
-  // we need to retrieve the value before deleting it, so we can
-  // pass it into the callback function; to this, pass a delete callback
-  // to store.get
-  store.get(key, (e, value) => {
-    if (e) {
-      if (cb) {
-        cb(e, undefined);
-      }
-      return;
+  const filePath = path.join(dirPath, `${key}.txt`);
+
+  // check if the file exists
+  if (!fs.existsSync(filePath)) {
+    if (cb) {
+      cb(undefined, undefined);
     }
+    return;
+  }
 
-    // if the key is an object, use its hash
-    const hashedKey = typeof key === 'object' ? util.id.getID(key) : key;
-    const filePath = path.join(dir, directory, `${hashedKey}.txt`);
+  // read the value (for the callback)
+  fs.readFile(filePath, (error, data) => {
+    let e = undefined;
+    let v = undefined;
+    if (error) {
+      e = new Error(`Error from local.store.del: failed to read file`);
+    } else {
+      v = util.deserialize(data);
 
-    // delete the file (errors if it does not exist)
-    fs.unlink(filePath, (error) => {
-      let e = undefined;
-      let v = undefined;
-      if (error) {
-        e = new Error(`Error unlinking ${filePath} in store.del`);
-      } else {
-        v = value;
-      }
+      // unlink (ie. remove) the file
+      fs.unlink(filePath, (error) => {
+        if (error) {
+          e = new Error(`Error from local.store.del: failed to unlink`);
+          v = undefined;
+        }
 
-      if (cb) {
-        cb(e, v);
-      }
-    });
+        if (cb) {
+          cb(e, v);
+        }
+      });
+    }
   });
 };
 
