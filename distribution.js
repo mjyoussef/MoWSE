@@ -2,6 +2,8 @@
 
 const util = require('./distribution/util/util.js');
 const args = require('yargs').argv;
+const path = require('path');
+const fs = require('fs');
 
 // Default configuration
 global.nodeConfig = global.nodeConfig || {
@@ -49,13 +51,11 @@ function loadGloVeEmbeddingsFromFolder(folderPath) {
 
   const files = fs.readdirSync(folderPath);
 
-  files.forEach(file => {
+  files.forEach((file) => {
     const filePath = path.join(folderPath, file);
-    
     const data = fs.readFileSync(filePath, 'utf8');
     const lines = data.split('\n');
-
-    lines.forEach(line => {
+    lines.forEach((line) => {
       const parts = line.split(' ');
       const word = parts[0];
       const embedding = parts.slice(1).map(parseFloat);
@@ -68,11 +68,13 @@ function loadGloVeEmbeddingsFromFolder(folderPath) {
       }
     });
   });
-
   return embeddings;
 }
 
-distribution.embeddings = loadGloVeEmbeddings('glove_300d_split');
+console.log('Loading GloVe embeddings...');
+// glovePath = './distribution/util/glove_300d_split'
+glovePath = './distribution/util/glove_test'
+distribution.embeddings = loadGloVeEmbeddingsFromFolder(glovePath);
 
 
 module.exports = distribution;

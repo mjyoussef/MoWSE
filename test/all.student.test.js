@@ -157,3 +157,31 @@ test('all gossip test', (done) => {
     });
   });
 });
+
+test('all.routes.put() embedding test', (done) => {
+  const embeddingTest = {};
+
+  embeddingTest.test = () => {
+    return global.distribution.embeddings['sandberger'];
+  };
+
+  distribution.mygroup.routes.put(embeddingTest, 'test', (e, v) => {
+    const n1 = {ip: '127.0.0.1', port: 8000};
+    const n2 = {ip: '127.0.0.1', port: 8001};
+    const n3 ={ip: '127.0.0.1', port: 8002};
+    const r1 = {node: n1, service: 'routes', method: 'get'};
+    const r2 = {node: n2, service: 'routes', method: 'get'};
+    const r3 = {node: n3, service: 'routes', method: 'get'};
+
+    distribution.local.comm.send(['test'], r1, (e, v) => {
+      console.log(v.test());
+      distribution.local.comm.send(['test'], r2, (e, v) => {
+        console.log(v.test());
+        distribution.local.comm.send(['test'], r3, (e, v) => {
+          console.log(v.test());
+          done();
+        });
+      });
+    });
+  });
+});

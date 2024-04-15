@@ -4,7 +4,7 @@
 
 function map(url, text) {
   model = global.distribution.embeddings;
-  words = text.toLowerCase().split(' ')
+  words = text.toLowerCase().split(' ');
   sum = null;
   for (word of words) {
     if (word in model) {
