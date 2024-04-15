@@ -40,6 +40,7 @@ const distribution = {
   util: require('./distribution/util/util.js'),
   local: require('./distribution/local/local.js'),
   node: require('./distribution/local/node.js'),
+  dir: __dirname,
 };
 
 global.distribution = distribution;

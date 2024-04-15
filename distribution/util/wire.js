@@ -1,4 +1,4 @@
-const id = require("./id");
+const id = require('./id');
 
 // const local = global.distribution.local;
 
@@ -23,7 +23,7 @@ function createRPC(func) {
     let remote = {
       node: global.nodeConfig,
       service: funcName,
-      method: "call",
+      method: 'call',
     };
 
     distribution.local.comm.send(params, remote, cb);
@@ -33,8 +33,8 @@ function createRPC(func) {
 }
 
 function toAsync(func) {
-  return function (...args) {
-    const callback = args.pop() || function () {};
+  return function(...args) {
+    const callback = args.pop() || function() {};
     try {
       const result = func(...args);
       callback(null, result);
