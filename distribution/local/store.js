@@ -24,6 +24,7 @@ function readFilesFromDirectory(dirPath, cb) {
       e = new Error(`Error from local.store: failed to read directory`);
     } else {
       v = files.map((file) => {
+        // remove the extension from the file
         return path.basename(file, path.extname(file));
       });
     }
@@ -35,7 +36,7 @@ function readFilesFromDirectory(dirPath, cb) {
 }
 
 store.get = (key, root, cb) => {
-  const dirPath = path.join(dir, root);
+  const dirPath = path.join(dir, ...root);
 
   // if the key is null, return all of the keys
   if (key === null) {
@@ -77,17 +78,19 @@ store.get = (key, root, cb) => {
 
 store.put = (value, key, root, cb) => {
   // get the directory path
-  let dirPath = path.join(dir, root);
-  if (typeof key === 'object') {
-    dirPath = path.join(filePath, key.gid);
+  let dirPath = path.join(dir, ...root);
+
+  // add key.gid if the key is for a group
+  if (key !== null && typeof key === 'object') {
+    dirPath = path.join(dirPath, key.gid);
     key = key.key;
   }
 
-  // make sure the directory path exists
+  // make the directory if it does not exist
   fs.mkdirSync(dirPath, {recursive: true});
 
   // use hash of value as key if the input key is undefined
-  key = key === undefined ? util.id.getID(value) : key;
+  key = key === null ? util.id.getID(value) : key;
 
   // append the file's name
   const filePath = path.join(dirPath, `${key}.txt`);
@@ -111,9 +114,11 @@ store.put = (value, key, root, cb) => {
 
 store.del = (key, root, cb) => {
   // get the directory path
-  let dirPath = path.join(dir, root);
+  let dirPath = path.join(dir, ...root);
+
+  // add key.gid if the key is for a group
   if (typeof key === 'object') {
-    dirPath = path.join(filePath, key.gid);
+    dirPath = path.join(dirPath, key.gid);
     key = key.key;
   }
 

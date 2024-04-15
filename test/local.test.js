@@ -304,3 +304,188 @@ test('(2 pts) local.groups.put(dummy)/rem(n1)/get(dummy)', (done) => {
     });
   });
 });
+
+test('local.mem.get(null)', (done) => {
+  const key1 = {
+    key: 'key1',
+    gid: 'abc',
+  }
+  const key2 = {
+    key: 'key2',
+    gid: 'abc',
+  }
+  distribution.local.mem.put('value1', key1, ['store', 'dir2'], (e, v) => {
+    expect(e).toBeFalsy();
+    distribution.local.mem.put('value2', key2, ['store', 'dir2'], (e, v) => {
+      expect(e).toBeFalsy();
+      distribution.local.mem.put('value3', 'key3', ['store', 'dir2'], (e, v) => {
+        expect(e).toBeFalsy();
+        distribution.local.mem.get(null, ['store', 'dir2'], (e, v) => {
+          expect(e).toBeFalsy();
+          expect(v).toEqual(['key3']);
+          const nullKey = {
+            key: null,
+            gid: 'abc',
+          }
+          distribution.local.mem.get(nullKey, ['store', 'dir2'], (e, v) => {
+            expect(e).toBeFalsy();
+            expect(v).toEqual(['key1', 'key2']);
+            done();
+          });
+        });
+      });
+    });
+  });
+});
+
+test('local.mem.put/get/del', (done) => {
+  distribution.local.mem.put('value1', 'key1', ['store'], (e, v) => {
+    distribution.local.mem.put('value2', 'key2', ['store'], (e, v) => {
+      distribution.local.mem.get('key1', ['store'], (e, v) => {
+        expect(e).toBeFalsy();
+        expect(v).toEqual('value1');
+        distribution.local.mem.del('key1', ['store'], (e, v) => {
+          expect(e).toBeFalsy();
+          distribution.local.mem.get('key1', ['store'], (e, v) => {
+            expect(e).toBeInstanceOf(Error);
+            expect(v).toBeFalsy();
+            done();
+          });
+        });
+      });
+    });
+  });
+});
+
+test('local.mem.put/get/del (multiple directories)', (done) => {
+  distribution.local.mem.put('value1', 'key2', ['store'], (e, v) => {
+    distribution.local.mem.put('value2', 'key2', ['store'], (e, v) => {
+      distribution.local.mem.put('value3', 'key1', ['store', 'dir1'], (e, v) => {
+        expect(e).toBeFalsy();
+        distribution.local.mem.put('value4', 'key2', ['dir2', 'dir3'], (e, v) => {
+          expect(e).toBeFalsy();
+          distribution.local.mem.get('key2', ['store'], (e, v) => {
+            expect(e).toBeFalsy();
+            expect(v).toEqual('value2');
+            distribution.local.mem.get('key2', ['dir2', 'dir3'], (e, v) => {
+              expect(e).toBeFalsy();
+              expect(v).toEqual('value4');
+              done();
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+test('local.mem.put/get/del (key w/ gid)', (done) => {
+  const key1 = {
+    key: 'key1',
+    gid: 'abc',
+  }
+  distribution.local.mem.put('value1', key1, ['store'], (e, v) => {
+    distribution.local.mem.get(key1, ['store'], (e, v) => {
+      expect(e).toBeFalsy();
+      expect(v).toEqual('value1');
+      distribution.local.mem.del(key1, ['store'], (e, v) => {
+        distribution.local.mem.get(key1, ['store'], (e, v) => {
+          expect(e).toBeInstanceOf(Error);
+          expect(v).toBeFalsy();
+          done();
+        });
+      });
+    });
+  });
+});
+
+test('local.store.get(null)', (done) => {
+  const key1 = {
+    key: 'key1',
+    gid: 'abc',
+  }
+  const key2 = {
+    key: 'key2',
+    gid: 'abc',
+  }
+  distribution.local.store.put('value1', key1, ['store1', 'dir2'], (e, v) => {
+    distribution.local.store.put('value2', key2, ['store1', 'dir2'], (e, v) => {
+      distribution.local.store.put('value3', 'key3', ['store1', 'dir2'], (e, v) => {
+        distribution.local.store.get(null, ['store1', 'dir2'], (e, v) => {
+          expect(e).toBeFalsy();
+          expect(v).toEqual(['key3']);
+          const nullKey = {
+            key: null,
+            gid: 'abc',
+          }
+          distribution.local.store.get(nullKey, ['store1', 'dir2'], (e, v) => {
+            expect(e).toBeFalsy();
+            expect(v).toEqual(['key1', 'key2']);
+            done();
+          });
+        });
+      });
+    });
+  });
+});
+
+test('local.store.put/get/del', (done) => {
+  distribution.local.store.put('value1', 'key1', ['store2'], (e, v) => {
+    distribution.local.store.put('value2', 'key2', ['store2'], (e, v) => {
+      distribution.local.store.get('key1', ['store2'], (e, v) => {
+        expect(e).toBeFalsy();
+        expect(v).toEqual('value1');
+        distribution.local.store.del('key1', ['store2'], (e, v) => {
+          expect(e).toBeFalsy();
+          distribution.local.store.get('key1', ['store2'], (e, v) => {
+            expect(e).toBeInstanceOf(Error);
+            expect(v).toBeFalsy();
+            done();
+          });
+        });
+      });
+    });
+  });
+});
+
+test('local.store.put/get/del (multiple directories)', (done) => {
+  distribution.local.store.put('value1', 'key2', ['store3'], (e, v) => {
+    distribution.local.store.put('value2', 'key2', ['store3'], (e, v) => {
+      distribution.local.store.put('value3', 'key1', ['store3', 'dir1'], (e, v) => {
+        expect(e).toBeFalsy();
+        distribution.local.store.put('value4', 'key2', ['store3', 'dir2', 'dir3'], (e, v) => {
+          expect(e).toBeFalsy();
+          distribution.local.store.get('key2', ['store3'], (e, v) => {
+            expect(e).toBeFalsy();
+            expect(v).toEqual('value2');
+            distribution.local.store.get('key2', ['store3', 'dir2', 'dir3'], (e, v) => {
+              expect(e).toBeFalsy();
+              expect(v).toEqual('value4');
+              done();
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+test('local.store.put/get/del (key w/ gid)', (done) => {
+  const key1 = {
+    key: 'key1',
+    gid: 'abc',
+  }
+  distribution.local.store.put('value1', key1, ['store4'], (e, v) => {
+    distribution.local.store.get(key1, ['store4'], (e, v) => {
+      expect(e).toBeFalsy();
+      expect(v).toEqual('value1');
+      distribution.local.store.del(key1, ['store4'], (e, v) => {
+        distribution.local.store.get(key1, ['store4'], (e, v) => {
+          expect(e).toBeInstanceOf(Error);
+          expect(v).toBeFalsy();
+          done();
+        });
+      });
+    });
+  });
+});

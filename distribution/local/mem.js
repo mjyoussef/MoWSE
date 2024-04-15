@@ -59,6 +59,7 @@ mem.get = (key, root, cb) => {
     if (cb) {
       cb(undefined, keys);
     }
+    return;
   }
 
   // default behavior: fetch the value associated w/ the key
