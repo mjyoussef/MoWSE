@@ -1,6 +1,5 @@
 const http = require('http');
 const url = require('url');
-
 let local = require('../local/local');
 const serialization = require('../util/serialization');
 
@@ -132,6 +131,15 @@ const start = function(onStart) {
         `Server running at http://${global.nodeConfig.ip}:${global.nodeConfig.port}/`,
     );
     onStart(server);
+    // folderPath = './distribution/util/glove_50d_split';
+    folderPath = './distribution/util/glove_50d_test';
+    global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
+      if (e) {
+        console.log(e);
+      } else {
+        console.log(v);
+      }
+    });
   });
 };
 
