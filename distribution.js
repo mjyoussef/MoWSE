@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const util = require('./distribution/util/util.js');
+const JSON = require
 const args = require('yargs').argv;
 const path = require('path');
 const fs = require('fs');
@@ -75,6 +76,7 @@ console.log('Loading GloVe embeddings...');
 // glovePath = './distribution/util/glove_300d_split'
 glovePath = './distribution/util/glove_test'
 distribution.embeddings = loadGloVeEmbeddingsFromFolder(glovePath);
+console.log(distribution.embeddings);
 
 
 module.exports = distribution;
