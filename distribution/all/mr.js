@@ -1,6 +1,3 @@
-const util = global.distribution.util;
-const local = global.distribution.local;
-
 const mr = function(config) {
   const gid = config.gid || 'all';
   const hash = config.hash || 'consistentHash';
@@ -17,7 +14,7 @@ const mr = function(config) {
 
       cb = cb || function() {};
 
-      local.groups.get(gid, (e, nodes) => {
+      global.distribution.local.groups.get(gid, (e, nodes) => {
         if (e) {
           cb(new Error('Error: failed to get nodes in group'), undefined);
           return;
@@ -38,7 +35,7 @@ const mr = function(config) {
             hash: hash,
           }
           mapPromises.push(new Promise((resolve, reject) => {
-            local.comm.send([mapArgs], remote, (e, v) => {
+            global.distribution.local.comm.send([mapArgs], remote, (e, v) => {
               if (e) {
                 reject(e);
               } else {
@@ -65,7 +62,7 @@ const mr = function(config) {
               mapFn: args.reduceFn,
             }
             reducePromises.push(new Promise((resolve, reject) => {
-              local.comm.send([reduceArgs], remote, (e, v) => {
+              global.distribution.local.comm.send([reduceArgs], remote, (e, v) => {
                 if (e) {
                   reject(e);
                 } else {

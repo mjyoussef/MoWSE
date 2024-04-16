@@ -7,11 +7,7 @@ function sendToNode(gid, hash, nodes, root, service, method, key, optionalArgs, 
 
   // arguments
   const args = optionalArgs || [];
-  args.push({
-    key: key,
-    gid: gid,
-  });
-  args.push(root);
+  args.push({key: key, gid: gid}, root);
 
   // remote
   const remote = {

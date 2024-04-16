@@ -1,7 +1,6 @@
 const store = require('./store');
 const groups = require('./groups');
 const comm = require('./comm');
-const util = global.distribution.util;
 
 const mr = {};
 
@@ -50,8 +49,8 @@ mr.map = (args, cb) => {
       for (let i=0; i<mapResults.length; i++) {
         let pair = mapResults[i];
         let reduceInputKey = Object.keys(pair)[0];
-        let reduceInputKid = util.id.getID(reduceInputKey);
-        let nid = util.id[args.hash](reduceInputKid, Object.keys(nodes));
+        let reduceInputKid = global.distribution.util.id.getID(reduceInputKey);
+        let nid = global.distribution.util.id[args.hash](reduceInputKid, Object.keys(nodes));
 
         // update the node's list of key-value pairs
         let nidPairs = reducersMap[nid] || [];
@@ -69,7 +68,7 @@ mr.map = (args, cb) => {
             service: 'mr',
             method: 'append',
           };
-          const sendID = util.id.getID({
+          const sendID = global.distribution.util.id.getID({
             config: global.nodeConfig,
             timestamp: counter++,
             items: reducersMap[nid],
