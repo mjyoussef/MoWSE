@@ -56,8 +56,13 @@ mem.get = (key, root, cb) => {
       return key !== 'subdirs';
     });
 
+    let e = undefined;
+    if (keys.length === 0) {
+      let e = new Error('Error: no key found');
+    }
+
     if (cb) {
-      cb(undefined, keys);
+      cb(e, keys);
     }
     return;
   }

@@ -1,4 +1,4 @@
-const http = global.distribution.http;
+const http = require('http');
 const serialize = global.distribution.util.serialize;
 const deserialize = global.distribution.util.deserialize;
 

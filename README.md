@@ -1,66 +1,25 @@
-# m6
+# M5: Distributed Execution Engine
+> Full name: `<first last>`
+> Email:  `<email@brown.edu>`
+> Username:  `cslogin`
 
-#### Crawler
+## Summary
+> Summarize your implementation, including key challenges you encountered
 
-Step 1: Extract URLs and text
+My implementation comprises `<number>` new software components, totaling `<number>` added lines of code over the previous implementation. Key challenges included `<1, 2, 3 + how you solved them>`.
 
-```javascript
-function map(key, value) {
-    /* 
-    INPUT:
-    key: page ID
-    value: URL
+## Correctness & Performance Characterization
+> Describe how you characterized the correctness and performance of your implementation
 
-    OUTPUT:
-    key: URL
-    value: HTML
-    */
-}
+*Correctness*:
 
-function reduce(key, values) {
-    /*
-    INPUT:
-    key: URL
-    values: HTML
+*Performance*:
 
-    OUTPUT:
-    key: list of URLs from HTML
-    value: text
-    */
-}
-```
+## Key Feature
+> Which extra features did you implement and how?
 
-The coordinator *only* collects the list of URLs, filters out previously seen URLs, and iteratively repeats this procedure until all URLs have been visited. Each node should also store a subset of URLs with their corresponding text.
+## Time to Complete
+> Roughly, how many hours did this milestone take you to complete?
 
-Step 2: Generate inverted index for n-grams
-```javascript
-function map(key, value) {
-    /*
-    INPUT:
-    key: URL
-    value: text
+Hours: `<time>`
 
-    OUTPUT:
-    key: URL
-    value: list of n-grams
-    */
-}
-
-function reduce(key, values) {
-    /* 
-    INPUT:
-    key: n-gram
-    values: list of URLs
-
-    OUTPUT:
-    key: n-gram
-    values: list of URLs, ordered (non-increasing order) by frequency
-    */
-}
-```
-
-Given the n-gram to URL mapping, we can find the top k relevant n-grams to a given query by having each node individually identify the top-k results, return them to the coordinator, which then selects the top-k n-grams after aggregating the partial results. This isn't very scalable because a node may store millions of n-grams that it must exhaustively compare to the query. 
-
-Alternative approach:
-1. Use a pre-trained Word2Vec model to generate a vector embedding of a document (ie. identify all the words in a document, generate their Word2Vec embeddings, and compute the embedding of the overall embedding of the document as a weighted avg of the word embeddings - weighted by word frequency).
-2. The document embeddings can be indexed using something like a KD-tree, B+-tree, Locality Sensitive Hashing, etc.

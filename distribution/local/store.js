@@ -1,5 +1,5 @@
-const fs = global.distribution.fs;
-const path = global.distribution.path;
+const fs = require('fs');
+const path = require('path');
 const util = global.distribution.util;
 const dir = global.distribution.dir;
 
@@ -36,6 +36,7 @@ function readFilesFromDirectory(dirPath, cb) {
 }
 
 store.get = (key, root, cb) => {
+  root = ['store', util.id.getSID(global.nodeConfig), ...root];
   const dirPath = path.join(dir, ...root);
 
   // if the key is null, return all of the keys
@@ -77,6 +78,7 @@ store.get = (key, root, cb) => {
 };
 
 store.put = (value, key, root, cb) => {
+  root = ['store', util.id.getSID(global.nodeConfig), ...root];
   // get the directory path
   let dirPath = path.join(dir, ...root);
 
@@ -88,9 +90,6 @@ store.put = (value, key, root, cb) => {
 
   // make the directory if it does not exist
   fs.mkdirSync(dirPath, {recursive: true});
-
-  // use hash of value as key if the input key is undefined
-  key = key === null ? util.id.getID(value) : key;
 
   // append the file's name
   const filePath = path.join(dirPath, `${key}.txt`);
@@ -113,6 +112,7 @@ store.put = (value, key, root, cb) => {
 };
 
 store.del = (key, root, cb) => {
+  root = ['store', util.id.getSID(global.nodeConfig), ...root];
   // get the directory path
   let dirPath = path.join(dir, ...root);
 
@@ -133,11 +133,14 @@ store.del = (key, root, cb) => {
   }
 
   // read the value (for the callback)
-  fs.readFile(filePath, (error, data) => {
+  fs.readFile(filePath, 'utf-8', (error, data) => {
     let e = undefined;
     let v = undefined;
     if (error) {
       e = new Error(`Error from local.store.del: failed to read file`);
+      if (cb) {
+        cb(e, undefined);
+      }
     } else {
       v = util.deserialize(data);
 
