@@ -1,39 +1,7 @@
 const id = require('./id');
 const serialization = require('./serialization');
 
-// const local = global.distribution.local;
-
 global.toLocal = new Map();
-
-// function createRPC(func) {
-//   const funcName = id.getID(func);
-//   // throw new Error(funcName);
-//   const newService = {
-//     call: (...args) => {
-//       func(...args);
-//     },
-//   };
-
-//   // distribution.local.routes.put(newService, funcName, (e, v) => {});
-//   global.toLocal.set(funcName, newService);
-
-//   function stub(...args) {
-//     const params = [...args];
-//     const cb = params.pop();
-
-//     let remote = {
-//       node: global.nodeConfig,
-//       service: funcName,
-//       method: "call",
-//     };
-
-//     distribution.local.comm.send(params, remote, cb);
-//   }
-
-//   return stub;
-// }
-
-// const funcMap = new Map();
 
 function createRPC(func) {
   // Write some code...
@@ -47,7 +15,7 @@ function createRPC(func) {
   // 4. pass the results to g's caller.
 
   const config = global.nodeConfig;
-  const funcId = id.getID(func);
+  const funcId = id.getID(serialization.serialize(func));
   global.toLocal.set(funcId, func);
 
   // return rpc stub
