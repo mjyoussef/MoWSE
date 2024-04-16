@@ -5,7 +5,7 @@ const dir = global.distribution.dir;
 
 const store = {};
 
-function readFilesFromDirectory(dirPath, cb) {
+function readFilesFromDirectory(dirPath, cb, includeValues = false, directories = false) {
   // if the directory does not exist, return an error
   if (!fs.existsSync(dirPath)) {
     if (cb) {
@@ -15,48 +15,72 @@ function readFilesFromDirectory(dirPath, cb) {
   }
 
   fs.readdir(dirPath, {withFileTypes: true}, (error, entries) => {
-    // get files ONLY (not subdirectories)
-    const files = entries.filter((entry) => entry.isFile()).map((file) => file.name);
+    // get files or directories (depending on whether `directories` is true)
+    const files = entries.filter((entry) => {
+      if (directories) {
+        return entry.isDirectory();
+      } else {
+        return entry.isFile();
+      }
+    }).map((file) => file.name);
+
     let e = undefined;
     let v = undefined;
 
     if (error) {
       e = new Error(`Error from local.store: failed to read directory`);
     } else {
-      v = files.map((file) => {
-        // remove the extension from the file
-        return path.basename(file, path.extname(file));
-      });
-    }
+      const promises = [];
+      for (let i=0; i<files.length; i++) {
 
-    if (cb) {
-      cb(e, v);
+        promises.push(new Promise((resolve, reject) => {
+          let name = directories ? files[i] : path.basename(files[i], path.extname(files[i]));
+
+          // if only collecting keys
+          if (!includeValues) {
+            resolve(name);
+          } else { // otherwise, add a key-value pair
+            let filePath = path.join(dirPath, files[i]);
+            fs.readFile(filePath, 'utf-8', (error, data) => {
+              if (error) {
+                reject(error);
+              } else {
+                let pair = {};
+                pair[name] = util.deserialize(data)
+                resolve(pair);
+              }
+            });
+          }
+        }));
+      }
+
+      Promise.all(promises).then((results) => {
+        cb(undefined, results);
+      }).catch((error) => {
+        cb(new Error('Failed to read directory'), undefined);
+      });
     }
   });
 }
 
-store.get = (key, root, cb) => {
-  root = ['store', util.id.getSID(global.nodeConfig), ...root];
+store.get = (key, root, cb, includeValuesForNull = false, directories = false) => {
+  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  if (key !== null && key.hasOwnProperty('gid')) {
+    temp.push(key.gid);
+  }
+  root = [...temp, ...root];
   const dirPath = path.join(dir, ...root);
 
   // if the key is null, return all of the keys
-  if (key === null) {
-    readFilesFromDirectory(dirPath, cb);
-    return;
-  }
-
-  // return all keys for a specific group
-  if (typeof key === 'object' && key.hasOwnProperty('gid') && key.key === null) {
-    // each group is stored under a directory
-    const gidDir = path.join(dirPath, key.gid);
-    readFilesFromDirectory(gidDir, cb);
+  if (key === null || (key.hasOwnProperty('key') && key.key === null)) {
+    readFilesFromDirectory(dirPath, cb, includeValuesForNull, directories);
     return;
   }
 
   // default behavior: get the data for a specific key
   let filePath = '';
-  if (typeof key === 'object') {
-    filePath = path.join(dirPath, key.gid, `${key.key}.txt`);
+  if (key.hasOwnProperty('key')) {
+    filePath = path.join(dirPath, `${key.key}.txt`);
   } else {
     filePath = path.join(dirPath, `${key}.txt`);
   }
@@ -78,13 +102,16 @@ store.get = (key, root, cb) => {
 };
 
 store.put = (value, key, root, cb) => {
-  root = ['store', util.id.getSID(global.nodeConfig), ...root];
+  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  if (key !== null && key.hasOwnProperty('gid')) {
+    temp.push(key.gid);
+  }
+  root = [...temp, ...root];
   // get the directory path
   let dirPath = path.join(dir, ...root);
 
   // add key.gid if the key is for a group
   if (key !== null && typeof key === 'object') {
-    dirPath = path.join(dirPath, key.gid);
     key = key.key;
   }
 
@@ -112,13 +139,16 @@ store.put = (value, key, root, cb) => {
 };
 
 store.del = (key, root, cb) => {
-  root = ['store', util.id.getSID(global.nodeConfig), ...root];
+  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  if (key !== null && key.hasOwnProperty('gid')) {
+    temp.push(key.gid);
+  }
+  root = [...temp, ...root];
   // get the directory path
   let dirPath = path.join(dir, ...root);
 
   // add key.gid if the key is for a group
   if (typeof key === 'object') {
-    dirPath = path.join(dirPath, key.gid);
     key = key.key;
   }
 
