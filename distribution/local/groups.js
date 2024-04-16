@@ -39,6 +39,7 @@ groups.put = (groupName, nodes, cb) => {
     gossip: global.distribution.gossipTemplate(context),
     mem: global.distribution.memTemplate(context),
     store: global.distribution.storeTemplate(context),
+    mr: global.distribution.mrTemplate(context),
   };
 
   callback(null, nodes);

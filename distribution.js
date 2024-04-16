@@ -70,6 +70,7 @@ global.distribution.routesTemplate = require('./distribution/all/routes');
 global.distribution.gossipTemplate = require('./distribution/all/gossip');
 global.distribution.memTemplate = require('./distribution/all/mem');
 global.distribution.storeTemplate = require('./distribution/all/store');
+global.distribution.mrTemplate = require('./distribution/all/mr');
 
 module.exports = global.distribution;
 

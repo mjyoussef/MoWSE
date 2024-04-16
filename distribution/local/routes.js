@@ -4,6 +4,7 @@ const groups = require('./groups');
 const gossip = require('./gossip');
 const mem = require('./mem');
 const store = require('./store');
+const mr = require('./mr');
 
 const routesStore = new Map();
 const routes = {};
@@ -43,4 +44,6 @@ routesStore.groups = groups;
 routesStore.gossip = gossip;
 routesStore.mem = mem;
 routesStore.store = store;
+routesStore.mr = mr;
+
 module.exports = routes;

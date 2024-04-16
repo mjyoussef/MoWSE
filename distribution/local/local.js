@@ -7,6 +7,7 @@ gossip   The receiver part of the gossip protocol   recv
 routes   A mapping from names to functions          get, put
 mem      An ephemeral (in-memory) store             get, put, del
 store    A persistent store                         get, put, del
+mr       Local MapReduce service                    map, reduce, append
 */
 
 /* Status Service */
@@ -30,6 +31,9 @@ const comm = require('./comm');
 /* Gossip Service */
 const gossip = require('./gossip');
 
+/* MapReduce service */
+const mr = require('./mr');
+
 module.exports = {
   status: status,
   routes: routes,
@@ -38,4 +42,5 @@ module.exports = {
   gossip: gossip,
   mem: mem,
   store: store,
+  mr: mr,
 };

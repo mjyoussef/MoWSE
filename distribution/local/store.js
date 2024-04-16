@@ -32,7 +32,6 @@ function readFilesFromDirectory(dirPath, cb, includeValues = false, directories 
     } else {
       const promises = [];
       for (let i=0; i<files.length; i++) {
-
         promises.push(new Promise((resolve, reject) => {
           let name = directories ? files[i] : path.basename(files[i], path.extname(files[i]));
 
@@ -46,7 +45,7 @@ function readFilesFromDirectory(dirPath, cb, includeValues = false, directories 
                 reject(error);
               } else {
                 let pair = {};
-                pair[name] = util.deserialize(data)
+                pair[name] = util.deserialize(data);
                 resolve(pair);
               }
             });
