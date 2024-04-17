@@ -16,26 +16,22 @@ mr.map = (args, cb) => {
   cb = cb || function() {};
 
   // collect the input key-value pairs for map
-  store.get({key: null, gid: args.gid}, [args.mrid, 'map'], (e, keyValPairs) => {
+  store.get({key: null, gid: args.gid}, [args.mrid, 'map'], async (e, keyValPairs) => {
     if (e) {
       cb(new Error('Error getting map input key-value pairs'), undefined);
     }
 
     // run map computation on each key-value pair
-    const mapResults = [];
+    const mapPromises = [];
     for (let i=0; i<keyValPairs.length; i++) {
       const pair = keyValPairs[i];
       const mapInputKey = Object.keys(pair)[0];
       const mapInputValue = pair[mapInputKey];
-
-      args.mapFn(mapInputKey, mapInputValue).then((mapResult) => {
-        mapResult = Array.isArray(mapResult) ? mapResult : [mapResult];
-        mapResults.push(...mapResult);
-      }).catch((error) => {
-        // ignore the error for now
-        // cb(new Error('Failed map computation'), undefined);
-      });
+      
+      mapPromises.push(args.mapFn(mapInputKey, mapInputValue));
     }
+
+    const mapResults = (await Promise.all(mapPromises)).flat();
 
     // after collecting map results, send to appropriate reducers
     groups.get(args.gid, (e, nodes) => {
@@ -57,6 +53,8 @@ mr.map = (args, cb) => {
         nidPairs.push(pair);
         reducersMap[nid] = nidPairs;
       }
+
+      console.log("reducersMap", reducersMap, global.nodeConfig);
 
       // send requests (to mr.append) to each reducer
       const appendPromises = [];
@@ -189,6 +187,7 @@ mr.append = (args, cb) => {
     // Each file stores a single value, and we use args.sendID
     // as the filename to avoid clashes among common values.
     const root = [args.mrid, 'reduce', key];
+    console.log("the key", key);
     promises.push(new Promise((resolve, reject) => {
       store.put(value, {key: args.sendID, gid: args.gid}, root, (e, v) => {
         if (e) {

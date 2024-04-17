@@ -1,6 +1,6 @@
 const mr = function(config) {
   const gid = config.gid || 'all';
-  const hash = config.hash || 'consistentHash';
+  const hash = config.hash || 'naiveHash';
 
   return {
     exec: (args, cb) => {
