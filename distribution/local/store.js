@@ -73,7 +73,7 @@ store.checkdir = (root, gid) => {
   return fs.existsSync(dirPath);
 }
 
-store.get = (key, root, cb, includeValuesForNull = false, directories = false) => {
+store.get = (key, root, cb, includeValues = false, directories = false) => {
   const temp = ['store', util.id.getSID(global.nodeConfig)];
   if (key !== null && key.hasOwnProperty('gid')) {
     temp.push(key.gid);
@@ -83,7 +83,7 @@ store.get = (key, root, cb, includeValuesForNull = false, directories = false) =
 
   // if the key is null, return all of the keys
   if (key === null || (key.hasOwnProperty('key') && key.key === null)) {
-    readFilesFromDirectory(dirPath, cb, includeValuesForNull, directories);
+    readFilesFromDirectory(dirPath, cb, includeValues, directories);
     return;
   }
 
