@@ -59,7 +59,7 @@ const mr = function(config) {
             const reduceArgs = {
               gid: gid,
               mrid: args.mrid,
-              mapFn: args.reduceFn,
+              reduceFn: args.reduceFn,
             }
             reducePromises.push(new Promise((resolve, reject) => {
               global.distribution.local.comm.send([reduceArgs], remote, (e, v) => {
@@ -73,7 +73,8 @@ const mr = function(config) {
           }
 
           Promise.all(reducePromises).then((results) => {
-            cb(undefined, results.flat());
+            results = results.flat().filter((entry) => entry !== undefined);
+            cb(undefined, results);
           }).catch((reduceError) => {
             cb(new Error('Error: failed reduce phase'), undefined);
           });

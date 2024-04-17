@@ -56,10 +56,21 @@ function readFilesFromDirectory(dirPath, cb, includeValues = false, directories 
       Promise.all(promises).then((results) => {
         cb(undefined, results);
       }).catch((error) => {
-        cb(new Error('Failed to read directory'), undefined);
+        // console.log(global.distribution.util.id.getSID(global.nodeConfig), error);
+        cb(new Error('Unexpected error from readFilesFromDirectory'), undefined);
       });
     }
   });
+}
+
+store.checkdir = (root, gid) => {
+  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  if (gid) {
+    temp.push(gid);
+  }
+  root = [...temp, ...root];
+  const dirPath = path.join(dir, ...root);
+  return fs.existsSync(dirPath);
 }
 
 store.get = (key, root, cb, includeValuesForNull = false, directories = false) => {

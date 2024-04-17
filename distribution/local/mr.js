@@ -108,6 +108,12 @@ mr.reduce = (args, cb) => {
 
   // reduce inputs are stored under {args.mrid}/reduce/{key}/...
 
+  // check if the directory exists; if not, this node is not
+  // a reducer, so return an empty result
+  if (!store.checkdir([args.mrid, 'reduce'], args.gid)) {
+    cb(undefined, undefined);
+  }
+
   // get all of the input keys for reduce
   store.get({key: null, gid: args.gid}, [args.mrid, 'reduce'], (e, keys) => {
     // each key in keys is a directory that stores values in individual files
@@ -133,6 +139,7 @@ mr.reduce = (args, cb) => {
             reject(e);
             return;
           }
+
           // get the values (we don't care about the keys)
           const reduceInputValues = [];
           for (let i=0; i<keyValPairs.length; i++) {
@@ -155,6 +162,7 @@ mr.reduce = (args, cb) => {
 
     // collect the reduce outputs and return
     Promise.all(reducePromises).then((results) => {
+      console.log("results", results);
       cb(undefined, results);
     }).catch((error) => {
       cb(new Error('Error: at least one reduce computation failed'), undefined);
@@ -204,7 +212,6 @@ mr.append = (args, cb) => {
   // is returned w/ results being undefined (may want to change
   // this behavior)
   Promise.all(promises).then((results) => {
-    console.log("the results", results);
     cb(undefined, true);
   }).catch((error) => {
     console.log(error);
