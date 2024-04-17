@@ -1,6 +1,7 @@
 const comm = require('./comm');
 const status = require('./status');
 const groups = require('./groups');
+const word2vec = require('./word2vec');
 const gossip = require('./gossip');
 
 const routesStore = new Map();
@@ -39,4 +40,5 @@ routesStore.comm = comm;
 routesStore.status = status;
 routesStore.groups = groups;
 routesStore.gossip = gossip;
+routesStore.word2vec = word2vec;
 module.exports = routes;

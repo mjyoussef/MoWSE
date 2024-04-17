@@ -58,6 +58,11 @@ status.spawn = (configuration, callback) => {
   const args = ['--config', serialization.serialize(newConfig)];
 
   fork(file, args);
+
+  // // Listen for message from child process
+  // childProcess.on('message', message => {
+  //   console.log(message);
+  // });
 };
 
 module.exports = status;

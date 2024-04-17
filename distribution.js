@@ -47,37 +47,15 @@ const distribution = {
 
 global.distribution = distribution;
 
-function loadGloVeEmbeddingsFromFolder(folderPath) {
-  const embeddings = {};
-
-  const files = fs.readdirSync(folderPath);
-
-  files.forEach((file) => {
-    const filePath = path.join(folderPath, file);
-    const data = fs.readFileSync(filePath, 'utf8');
-    const lines = data.split('\n');
-    lines.forEach((line) => {
-      const parts = line.split(' ');
-      const word = parts[0];
-      const embedding = parts.slice(1).map(parseFloat);
-      if (!embeddings[word]) {
-        embeddings[word] = embedding;
-      } else {
-        for (let i = 0; i < embedding.length; i++) {
-          embeddings[word][i] = (embeddings[word][i] + embedding[i]) / 2;
-        }
-      }
-    });
-  });
-  return embeddings;
-}
-
-console.log('Loading GloVe embeddings...');
-// glovePath = './distribution/util/glove_300d_split'
-glovePath = './distribution/util/glove_test'
-distribution.embeddings = loadGloVeEmbeddingsFromFolder(glovePath);
-console.log(distribution.embeddings);
-
+// folderPath = './distribution/util/glove_50d_split';
+folderPath = './distribution/util/glove_50d_test';
+global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
+  if (e) {
+    console.log(e);
+  } else {
+    console.log(v);
+  }
+});
 
 module.exports = distribution;
 

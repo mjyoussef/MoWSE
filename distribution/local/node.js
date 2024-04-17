@@ -89,7 +89,6 @@ const start = function(onStart) {
       /* Here, you can handle the service requests. */
 
       // Write some code...
-
       local.routes.get(service, (error, service) => {
         if (error) {
           res.end(serialization.serialize(error));

@@ -30,6 +30,8 @@ const comm = require('./comm');
 /* Gossip Service */
 const gossip = require('./gossip');
 
+const word2vec = require('./word2vec');
+
 module.exports = {
   status: status,
   routes: routes,
@@ -38,4 +40,5 @@ module.exports = {
   gossip: gossip,
   mem: mem,
   store: store,
+  word2vec: word2vec,
 };
