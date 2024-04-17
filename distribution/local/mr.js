@@ -1,6 +1,7 @@
 const store = require('./store');
 const groups = require('./groups');
 const comm = require('./comm');
+const util = global.distribution.util;
 
 const mr = {};
 
@@ -27,7 +28,6 @@ mr.map = (args, cb) => {
       const pair = keyValPairs[i];
       const mapInputKey = Object.keys(pair)[0];
       const mapInputValue = pair[mapInputKey];
-      
       mapPromises.push(args.mapFn(mapInputKey, mapInputValue));
     }
 
@@ -54,12 +54,11 @@ mr.map = (args, cb) => {
         reducersMap[nid] = nidPairs;
       }
 
-      console.log("reducersMap", reducersMap, global.nodeConfig);
-
       // send requests (to mr.append) to each reducer
       const appendPromises = [];
       let counter = 0;
       for (const nid in reducersMap) {
+        counter += 1;
         appendPromises.push(new Promise((resolve, reject) => {
           const remote = {
             node: nodes[nid],
@@ -68,7 +67,7 @@ mr.map = (args, cb) => {
           };
           const sendID = global.distribution.util.id.getID({
             config: global.nodeConfig,
-            timestamp: counter++,
+            timestamp: counter,
             items: reducersMap[nid],
           });
           const appendArgs = {
@@ -176,7 +175,9 @@ mr.append = (args, cb) => {
   cb = cb || function() {};
 
   const promises = [];
+  let counter = 0;
   for (let i=0; i<args.items.length; i++) {
+    counter += 1;
     const item = args.items[i];
 
     // get key and value
@@ -187,9 +188,9 @@ mr.append = (args, cb) => {
     // Each file stores a single value, and we use args.sendID
     // as the filename to avoid clashes among common values.
     const root = [args.mrid, 'reduce', key];
-    console.log("the key", key);
     promises.push(new Promise((resolve, reject) => {
-      store.put(value, {key: args.sendID, gid: args.gid}, root, (e, v) => {
+      const fileName = util.id.getID({key: args.sendID, gid: args.gid, ts: counter});
+      store.put(value, {key: fileName, gid: args.gid}, root, (e, v) => {
         if (e) {
           reject(e);
         } else {
@@ -203,8 +204,10 @@ mr.append = (args, cb) => {
   // is returned w/ results being undefined (may want to change
   // this behavior)
   Promise.all(promises).then((results) => {
+    console.log("the results", results);
     cb(undefined, true);
   }).catch((error) => {
+    console.log(error);
     cb(new Error('Error storing at least one key-val pair in local.mr.append'), undefined);
   });
 };
