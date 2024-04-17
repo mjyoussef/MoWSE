@@ -74,26 +74,6 @@ afterAll((done) => {
   });
 });
 
-function sanityCheck(mapper, reducer, dataset, expected, done) {
-  let mapped = dataset.map((o) =>
-    mapper(Object.keys(o)[0], o[Object.keys(o)[0]]));
-  /* Flatten the array. */
-  mapped = mapped.flat();
-  let shuffled = mapped.reduce((a, b) => {
-    let key = Object.keys(b)[0];
-    if (a[key] === undefined) a[key] = [];
-    a[key].push(b[key]);
-    return a;
-  }, {});
-  let reduced = Object.keys(shuffled).map((k) => reducer(k, shuffled[k]));
-
-  try {
-    expect(reduced).toEqual(expect.arrayContaining(expected));
-  } catch (e) {
-    done(e);
-  }
-}
-
 // ---all.mr---
 
 test('(25 pts) all.mr:ncdc', (done) => {
@@ -151,73 +131,73 @@ test('(25 pts) all.mr:ncdc', (done) => {
   });
 });
 
-// test('(25 pts) all.mr:dlib', (done) => {
-//   let m2 = (key, value) => {
-//     // map each word to a key-value pair like {word: 1}
-//     return new Promise((resolve, reject) => {
-//       let words = value.split(/(\s+)/).filter((e) => e !== ' ');
-//       let out = [];
-//       words.forEach((w) => {
-//         let o = {};
-//         o[w] = 1;
-//         out.push(o);
-//       });
-//       resolve(out);
-//     });
-//   };
+test('(25 pts) all.mr:dlib', (done) => {
+  let m2 = (key, value) => {
+    // map each word to a key-value pair like {word: 1}
+    return new Promise((resolve, reject) => {
+      let words = value.split(/(\s+)/).filter((e) => e !== ' ');
+      let out = [];
+      words.forEach((w) => {
+        let o = {};
+        o[w] = 1;
+        out.push(o);
+      });
+      resolve(out);
+    });
+  };
 
-//   let r2 = (key, values) => {
-//     return new Promise((resolve, reject) => {
-//       let out = {};
-//       out[key] = values.length;
-//       resolve(out);
-//     });
-//   };
+  let r2 = (key, values) => {
+    return new Promise((resolve, reject) => {
+      let out = {};
+      out[key] = values.length;
+      resolve(out);
+    });
+  };
 
-//   let dataset = [
-//     {'b1-l1': 'It was the best of times, it was the worst of times,'},
-//     {'b1-l2': 'it was the age of wisdom, it was the age of foolishness,'},
-//     {'b1-l3': 'it was the epoch of belief, it was the epoch of incredulity,'},
-//     {'b1-l4': 'it was the season of Light, it was the season of Darkness,'},
-//     {'b1-l5': 'it was the spring of hope, it was the winter of despair,'},
-//   ];
+  let dataset = [
+    {'b1-l1': 'It was the best of times, it was the worst of times,'},
+    {'b1-l2': 'it was the age of wisdom, it was the age of foolishness,'},
+    {'b1-l3': 'it was the epoch of belief, it was the epoch of incredulity,'},
+    {'b1-l4': 'it was the season of Light, it was the season of Darkness,'},
+    {'b1-l5': 'it was the spring of hope, it was the winter of despair,'},
+  ];
 
-//   let expected = [
-//     {It: 1}, {was: 10},
-//     {the: 10}, {best: 1},
-//     {of: 10}, {'times,': 2},
-//     {it: 9}, {worst: 1},
-//     {age: 2}, {'wisdom,': 1},
-//     {'foolishness,': 1}, {epoch: 2},
-//     {'belief,': 1}, {'incredulity,': 1},
-//     {season: 2}, {'Light,': 1},
-//     {'Darkness,': 1}, {spring: 1},
-//     {'hope,': 1}, {winter: 1},
-//     {'despair,': 1},
-//   ];
+  let expected = [
+    {It: 1}, {was: 10},
+    {the: 10}, {best: 1},
+    {of: 10}, {'times,': 2},
+    {it: 9}, {worst: 1},
+    {age: 2}, {'wisdom,': 1},
+    {'foolishness,': 1}, {epoch: 2},
+    {'belief,': 1}, {'incredulity,': 1},
+    {season: 2}, {'Light,': 1},
+    {'Darkness,': 1}, {spring: 1},
+    {'hope,': 1}, {winter: 1},
+    {'despair,': 1},
+  ];
 
-//   /* Sanity check: map and reduce locally */
-//   // sanityCheck(m2, r2, dataset, expected, done);
+  /* Sanity check: map and reduce locally */
+  // sanityCheck(m2, r2, dataset, expected, done);
 
-//   const doMapReduce = (cb) => {
-//     distribution.dlib.mr.exec({mrid: 'dlib-mr', mapFn: m2, reduceFn: r2}, (e, v) => {
-//       expect(e).toBeFalsy();
-//       expect(v).toEqual(expect.arrayContaining(expected));
-//       done();
-//     });
-//   };
+  const doMapReduce = (cb) => {
+    distribution.dlib.mr.exec({mrid: 'dlib-mr', mapFn: m2, reduceFn: r2}, (e, v) => {
+      expect(e).toBeFalsy();
+      expect(v).toEqual(expect.arrayContaining(expected));
+      done();
+    });
+  };
 
-//   let cntr = 0;
+  let cntr = 0;
 
-//   // We send the dataset to the cluster
-//   dataset.forEach((o) => {
-//     let key = Object.keys(o)[0];
-//     let value = o[key];
-//     distribution.dlib.store.put(value, key, (e, v) => {
-//       cntr++;
-//       if (cntr === dataset.length) {
-//         doMapReduce();
-//       }
-//     }, ['dlib-mr', 'map']);
-//   });
-// });
+  // We send the dataset to the cluster
+  dataset.forEach((o) => {
+    let key = Object.keys(o)[0];
+    let value = o[key];
+    distribution.dlib.store.put(value, key, (e, v) => {
+      cntr++;
+      if (cntr === dataset.length) {
+        doMapReduce();
+      }
+    }, ['dlib-mr', 'map']);
+  });
+});

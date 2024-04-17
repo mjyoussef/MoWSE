@@ -112,6 +112,7 @@ mr.reduce = (args, cb) => {
   // a reducer, so return an empty result
   if (!store.checkdir([args.mrid, 'reduce'], args.gid)) {
     cb(undefined, undefined);
+    return;
   }
 
   // get all of the input keys for reduce
@@ -162,7 +163,6 @@ mr.reduce = (args, cb) => {
 
     // collect the reduce outputs and return
     Promise.all(reducePromises).then((results) => {
-      console.log("results", results);
       cb(undefined, results);
     }).catch((error) => {
       cb(new Error('Error: at least one reduce computation failed'), undefined);
@@ -214,7 +214,6 @@ mr.append = (args, cb) => {
   Promise.all(promises).then((results) => {
     cb(undefined, true);
   }).catch((error) => {
-    console.log(error);
     cb(new Error('Error storing at least one key-val pair in local.mr.append'), undefined);
   });
 };
