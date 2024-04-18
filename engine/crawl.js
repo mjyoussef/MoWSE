@@ -44,6 +44,12 @@ const startNodes = (cb) => {
 // CRAWL  //
 ////////////
 
+// TODO: Mapreduce let you pass args to the mapreduce function as an optional arg
+// this allows us to access the mrid
+// We should also configure mapreduce to let something run over a set number of
+// iterations maybe?
+// gotta work on the message passing after we parse a URL.
+
 const crawl_map = (key, value) => {
   return new Promise((resolve, reject) => {
     const baseURL = value;
@@ -53,8 +59,6 @@ const crawl_map = (key, value) => {
     console.log("CRAWL INPUT", key, value);
 
     const visitedPath = ["crawl", "crawl-mr", "visited"];
-
-    // store baseURL to local
 
     const makePromise = (sourceURL, resolve, reject) =>
       distribution.https
@@ -89,9 +93,6 @@ const crawl_map = (key, value) => {
 
             const o = {};
             o[title] = [...urlSet];
-
-            //   console.log("OUT", o);
-
             resolve([o]);
           });
         })
@@ -105,6 +106,10 @@ const crawl_map = (key, value) => {
       } else {
         distribution.local.store.put(value, title, visitedPath, (e, v) => {
           console.log(e, v);
+
+          // should probably remove the URL after we parse it.
+          // not returning text yet fyi. Should probably be done here.
+
           makePromise(baseURL, resolve, reject);
         });
       }
