@@ -40,8 +40,10 @@ if (args.config) {
 
 global.distribution = {};
 global.distribution.url = require("url");
+global.distribution.URL = require("url").URL;
 global.distribution.path = require("path");
 global.distribution.fs = require("fs");
+global.distribution.JSDOM = require("jsdom").JSDOM;
 global.distribution.dir = __dirname;
 global.distribution.http = require("http");
 global.distribution.https = require("https");
