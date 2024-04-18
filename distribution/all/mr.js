@@ -23,7 +23,7 @@ const mr = function(config) {
           return;
         }
 
-        const inputs = args.keys || [];
+        const inputs = args.inputs || [];
         const storePromises = [];
 
         for (let i=0; i<inputs.length; i++) {
