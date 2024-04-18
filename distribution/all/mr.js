@@ -9,15 +9,49 @@ const mr = function(config) {
         mrid: string,
         mapFn: function,
         reduceFn: function,
+        inputs: (optional); a list of keys to store before 
+        beginning MapReduce
       }
       */
 
       cb = cb || function() {};
 
-      global.distribution.local.groups.get(gid, (e, nodes) => {
+
+      global.distribution.local.groups.get(gid, async (e, nodes) => {
         if (e) {
           cb(new Error('Error: failed to get nodes in group'), undefined);
           return;
+        }
+
+        const inputs = args.keys || [];
+        const storePromises = [];
+
+        for (let i=0; i<inputs.length; i++) {
+          // each input is a single key-value pair
+          const input = inputs[i];
+          const key = Object.keys(input)[0];
+          const value = input[key];
+
+          // add promise
+          storePromises.push(new Promise((resolve, reject) => {
+            global.distribution[gid].store(value, key, (e, v) => {
+              if (e) {
+                reject(e, v);
+              } else {
+                resolve(v);
+              }
+            }, root = [args.mrid, 'map']);
+          }));
+        }
+
+        // make sure all the promises resolved
+        const storeResults = await Promise.allSettled(storePromises);
+        for (let i=0; i<storeResults.length; i++) {
+          const storeResult = storeResults[i];
+          if (storeResult.status !== 'fulfilled') {
+            cb(new Error('Failed to store input keys in all.mr.exec'), undefined);
+            return;
+          }
         }
 
         // map phase
