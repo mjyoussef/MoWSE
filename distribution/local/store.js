@@ -101,7 +101,7 @@ store.get = (key, root, cb, includeValues = false, directories = false) => {
   root = [...temp, ...root];
   const dirPath = path.join(dir, ...root);
 
-  console.log("STORE GET", dirPath, dir, root);
+  // console.log("STORE GET", dirPath, dir, root);
 
   // if the key is null, return all of the keys
   if (key === null || (key.hasOwnProperty("key") && key.key === null)) {
@@ -139,12 +139,12 @@ store.put = (value, key, root, cb) => {
     temp.push(key.gid);
   }
 
-  console.log("store put root", root);
+  // console.log("store put root", root);
   root = [...temp, ...root];
   // get the directory path
   let dirPath = path.join(dir, ...root);
 
-  console.log("STORE PUT", dirPath, dir, root);
+  // console.log("STORE PUT", dirPath, dir, root);
 
   // add key.gid if the key is for a group
   if (key !== null && typeof key === "object") {
@@ -189,6 +189,8 @@ store.del = (key, root, cb) => {
   }
 
   const filePath = path.join(dirPath, `${key}.txt`);
+
+  console.log("DELETING", filePath);
 
   // check if the file exists
   if (!fs.existsSync(filePath)) {

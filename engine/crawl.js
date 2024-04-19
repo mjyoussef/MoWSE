@@ -105,12 +105,11 @@ const crawl_map = (key, value) => {
         resolve([]);
       } else {
         distribution.local.store.put(value, title, visitedPath, (e, v) => {
-          console.log(e, v);
-
-          // should probably remove the URL after we parse it.
-          // not returning text yet fyi. Should probably be done here.
-
-          makePromise(baseURL, resolve, reject);
+          const keyPath = ["crawl", "crawl-mr", "map"];
+          distribution.local.store.del(key, keyPath, (e, v) => {
+            // console.log(e, v);
+            makePromise(baseURL, resolve, reject);
+          });
         });
       }
     });
@@ -119,10 +118,32 @@ const crawl_map = (key, value) => {
 
 const crawl_reduce = (key, values) => {
   return new Promise((resolve, reject) => {
-    // console.log("REDUCE", key, values);
-    let out = {};
-    out[key] = values[0].length;
-    resolve(out);
+    const res = values[0];
+    const resCount = res.length;
+
+    let counter = 0;
+
+    const toVisitPath = ["crawl-mr", "map"];
+
+    res.forEach((value) => {
+      const urlParts = value.split("/");
+      const title = urlParts[urlParts.length - 1];
+      distribution.crawl.store.put(
+        value,
+        title,
+        (e, v) => {
+          // should probably remove the URL after we parse it.
+          // not returning text yet fyi. Should probably be done here.
+          counter++;
+          if (counter === resCount) {
+            let out = {};
+            out[key] = resCount;
+            resolve(out);
+          }
+        },
+        toVisitPath
+      );
+    });
   });
 };
 
@@ -130,12 +151,31 @@ const crawl_reduce = (key, values) => {
 // Workflow //
 //////////////
 
-const doMapReduce = (cb) => {
+const URLCOUNT = 1000;
+
+const doMapReduce = (cb, total = 0, id = 0) => {
+  if (total >= URLCOUNT) {
+    cb(null, null);
+    return;
+  }
+
   distribution.crawl.mr.exec(
-    { mrid: "crawl-mr", mapFn: crawl_map, reduceFn: crawl_reduce },
+    { mrid: `crawl-mr`, mapFn: crawl_map, reduceFn: crawl_reduce },
     (e, v) => {
+      let newUrlCount = 0;
+
       console.log("MR RESULT", e, v);
-      cb(e, v);
+
+      v.forEach((res) => {
+        let key = Object.keys(res)[0];
+
+        let value = res[key];
+        console.log("RES", key, res, value);
+
+        newUrlCount += value;
+      });
+
+      doMapReduce(cb, total + newUrlCount, id + 1);
     }
   );
 };
