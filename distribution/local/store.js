@@ -190,7 +190,7 @@ store.del = (key, root, cb) => {
 
   const filePath = path.join(dirPath, `${key}.txt`);
 
-  console.log("DELETING", filePath);
+  // console.log("DELETING", filePath);
 
   // check if the file exists
   if (!fs.existsSync(filePath)) {

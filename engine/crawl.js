@@ -16,9 +16,9 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = { ip: "127.0.0.1", port: 7110 };
-const n2 = { ip: "127.0.0.1", port: 7111 };
-const n3 = { ip: "127.0.0.1", port: 7112 };
+const n1 = { ip: "127.0.0.1", port: 7113 };
+const n2 = { ip: "127.0.0.1", port: 7114 };
+const n3 = { ip: "127.0.0.1", port: 7115 };
 
 ////////////////
 // BEFORE ALL //
@@ -75,21 +75,27 @@ const crawl_map = (key, value) => {
 
             const urlSet = new Set();
 
-            paragraphs.forEach((paragraph) => {
+            for (let i = 0; i < paragraphs.length; i++) {
+              const paragraph = paragraphs[i];
               const paragraphHtml = paragraph.innerHTML;
               const matches = paragraphHtml.match(
                 /href=["'](\/wiki\/.*?)["']/gi
               );
               if (matches) {
-                matches.forEach((match) => {
+                for (let j = 0; j < matches.length; j++) {
+                  const match = matches[j];
                   const href = match.replace('href="', "").replace('"', "");
                   const url = new distribution.URL(href, sourceURL).toString();
                   if (!url.includes("&") && !url.includes("#")) {
                     urlSet.add(url);
                   }
-                });
+                }
               }
-            });
+
+              if (urlSet.length > 25) {
+                break;
+              }
+            }
 
             const o = {};
             o[title] = [...urlSet];
@@ -154,11 +160,6 @@ const crawl_reduce = (key, values) => {
 const URLCOUNT = 1000;
 
 const doMapReduce = (cb, total = 0, id = 0) => {
-  if (total >= URLCOUNT) {
-    cb(null, null);
-    return;
-  }
-
   distribution.crawl.mr.exec(
     { mrid: `crawl-mr`, mapFn: crawl_map, reduceFn: crawl_reduce },
     (e, v) => {
@@ -174,6 +175,12 @@ const doMapReduce = (cb, total = 0, id = 0) => {
 
         newUrlCount += value;
       });
+
+      if (total >= URLCOUNT) {
+        console.log("FINISHED", total, id);
+        cb(null, total);
+        return;
+      }
 
       doMapReduce(cb, total + newUrlCount, id + 1);
     }
