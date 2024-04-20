@@ -6,7 +6,7 @@ function map(url, text) {
     let model = global.distribution.embeddings;
     let words = text.toLowerCase().split(' ');
     const stopwords = fs.readFileSync('../util/stop.txt', 'utf8').split('\n');
-    words = words.filter(word => !stopwords.includes(word));
+    words = words.filter((word) => !stopwords.includes(word));
     let sum = null;
     for (word of words) {
       if (word in model) {

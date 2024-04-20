@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
 const util = require('./distribution/util/util.js');
-const JSON = require
 const args = require('yargs').argv;
-const path = require('path');
-const fs = require('fs');
 
 // Default configuration
 global.nodeConfig = global.nodeConfig || {

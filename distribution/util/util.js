@@ -27,7 +27,7 @@ function loadGloVeEmbeddings(folderPath, callback) {
       });
     });
     global.distribution.embeddings = embeddings;
-    callback(null, 'Successfully loaded GloVe embeddings')
+    callback(null, 'Successfully loaded GloVe embeddings');
   } catch (err) {
     callback(err, null);
   }
@@ -38,4 +38,5 @@ module.exports = {
   deserialize: serialization.deserialize,
   id: id,
   wire: wire,
+  loadGloVeEmbeddings: loadGloVeEmbeddings,
 };
