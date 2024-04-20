@@ -55,7 +55,7 @@ const vecStore = (config) => {
       local.groups.get(gid, (e, nodes) => {
         if (e) {
           if (cb) {
-            cb(new Error(`Error from all.vecStore.put: failed to get nodes in gid`), undefined);
+            cb(new Error('Error from all.vecStore.put: failed to get nodes in gid'), undefined);
           }
           return;
         }
@@ -64,10 +64,11 @@ const vecStore = (config) => {
       });
     },
     query:(key, cb, k=5) => {
+      // replace with a MR framework
       local.groups.get(gid, (e, nodes) => {
         if (e) {
           if (cb) {
-            cb(new Error(`Error from all.vecStore.query: failed to get nodes in gid`), undefined);
+            cb(new Error('Error from all.vecStore.query: failed to get nodes in gid'), undefined);
           }
           return;
         }
@@ -87,7 +88,7 @@ const vecStore = (config) => {
           local.comm.send([keyObj], remote, (e, v) => {
             if (e) {
               if (cb) {
-                cb(new Error(`Error from all.vecStore.query: failed to query`), undefined);
+                cb(new Error('Error from all.vecStore.query: failed to query'), undefined);
               }
               return;
             }
