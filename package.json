@@ -19,6 +19,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@pinecone-database/pinecone": "^2.2.0",
+    "vectordb": "^0.4.16",
     "yargs": "^17.7.2"
   }
 }

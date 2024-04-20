@@ -8,6 +8,7 @@ routes   A mapping from names to functions          get, put
 mem      An ephemeral (in-memory) store             get, put, del
 store    A persistent store                         get, put, del
 mr       Local MapReduce service                    map, reduce, append
+vecStore Local vecStore service                     put, query
 */
 
 /* Status Service */
@@ -34,6 +35,9 @@ const gossip = require('./gossip');
 /* MapReduce service */
 const mr = require('./mr');
 
+/* vecStore service */
+const mr = require('./vecStore');
+
 module.exports = {
   status: status,
   routes: routes,
@@ -43,4 +47,5 @@ module.exports = {
   mem: mem,
   store: store,
   mr: mr,
+  vecStore: vecStore,
 };

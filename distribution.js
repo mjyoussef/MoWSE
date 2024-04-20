@@ -86,6 +86,16 @@ global.distribution.mrTemplate = require("./distribution/all/mr");
 
 module.exports = global.distribution;
 
+// folderPath = './distribution/util/glove_50d_split';
+folderPath = './distribution/util/glove_50d_test';
+global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
+  if (e) {
+    console.log(e);
+  } else {
+    console.log(v);
+  }
+});
+
 /* The following code is run when distribution.js is run directly */
 if (require.main === module) {
   distribution.node.start(global.nodeConfig.onStart);

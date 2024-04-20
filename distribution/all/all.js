@@ -8,6 +8,7 @@ gossip    Status and information dissemination   send, at, del
 mem       An ephemeral (in-memory) store         get, put, del, reconf
 store     A persistent store                     get, put, del, reconf
 mr        A map-reduce implementation            exec
+vecStore Local vecStore service                  put, query
 */
 
 /* Comm Service */
@@ -34,6 +35,9 @@ const store = require('./store');
 /* Map-Reduce Service */
 const mr = require('./mr');
 
+/* vecStore Service */
+const mr = require('./vecStore');
+
 module.exports = {
   comm: comm,
   groups: groups,
@@ -43,4 +47,5 @@ module.exports = {
   mem: mem,
   store: store,
   mr: mr,
+  vecStore: vecStore,
 };
