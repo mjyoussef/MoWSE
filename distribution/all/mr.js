@@ -9,7 +9,7 @@ const mr = function(config) {
         mrid: string,
         mapFn: function,
         reduceFn: function,
-        inputs: (optional); a list of keys to store before 
+        inputs: (optional); a list of keys to store before
         beginning MapReduce
       }
       */
@@ -61,13 +61,13 @@ const mr = function(config) {
             node: nodes[nid],
             service: 'mr',
             method: 'map',
-          }
+          };
           const mapArgs = {
             gid: gid,
             mrid: args.mrid,
             mapFn: args.mapFn,
             hash: hash,
-          }
+          };
           mapPromises.push(new Promise((resolve, reject) => {
             global.distribution.local.comm.send([mapArgs], remote, (e, v) => {
               if (e) {
@@ -81,7 +81,6 @@ const mr = function(config) {
 
         // wait for map phase to complete
         Promise.all(mapPromises).then((notifications) => {
-          
           // reduce phase
           const reducePromises = [];
           for (const nid in nodes) {
@@ -89,12 +88,12 @@ const mr = function(config) {
               node: nodes[nid],
               service: 'mr',
               method: 'reduce',
-            }
+            };
             const reduceArgs = {
               gid: gid,
               mrid: args.mrid,
               reduceFn: args.reduceFn,
-            }
+            };
             reducePromises.push(new Promise((resolve, reject) => {
               global.distribution.local.comm.send([reduceArgs], remote, (e, v) => {
                 if (e) {
@@ -114,7 +113,7 @@ const mr = function(config) {
           });
         }).catch((mapError) => {
           cb(new Error('Error: failed map phase'), undefined);
-        })
+        });
       });
     },
   };

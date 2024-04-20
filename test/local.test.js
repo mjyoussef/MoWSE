@@ -40,6 +40,38 @@ afterAll((done) => {
   done();
 });
 
+// function for clearing 'store' directory
+function deleteFilesSynchronously() {
+  const directory = path.join(global.distribution.dir, 'store');
+  try {
+    // Read all files and directories in the specified directory
+    const files = fs.readdirSync(directory);
+
+    for (const file of files) {
+      // Construct full path to the file or directory
+      const fullPath = path.join(directory, file);
+
+      // Skip .gitignore in the root directory
+      if (file === '.gitignore' && fullPath === path.join(directory, '.gitignore')) {
+        continue;
+      }
+
+      // Check if the path is a directory or a file
+      const stat = fs.statSync(fullPath);
+
+      if (stat.isDirectory()) {
+        // Recursively delete directories
+        fs.rmSync(fullPath, {recursive: true, force: true});
+      } else {
+        // Delete files
+        fs.unlinkSync(fullPath);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to delete:', err);
+  }
+}
+
 beforeEach(() => {
   jest.resetModules();
 
@@ -59,6 +91,9 @@ beforeEach(() => {
   routes = local.routes;
   comm = local.comm;
   status = local.status;
+
+  // make sure the store directory is empty
+  deleteFilesSynchronously();
 });
 
 // ---STATUS---

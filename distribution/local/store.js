@@ -1,89 +1,92 @@
 const fs = require('fs');
 const path = require('path');
-const util = global.distribution.util;
-const dir = global.distribution.dir;
 
 const store = {};
 
-function readFilesFromDirectory(dirPath, cb, includeValues = false, directories = false) {
+function readFilesFromDirectory(dirPath, cb, includeValues=false) {
+  cb = cb || function() {};
+
   // if the directory does not exist, return an error
   if (!fs.existsSync(dirPath)) {
-    if (cb) {
-      cb(new Error(`Error from local.store: directory does not exist`), undefined);
-    }
+    cb(new Error(`Local.store: directory does not exist`), undefined);
     return;
   }
 
   fs.readdir(dirPath, {withFileTypes: true}, (error, entries) => {
-    // get files or directories (depending on whether `directories` is true)
-    const files = entries.filter((entry) => {
-      if (directories) {
-        return entry.isDirectory();
-      } else {
-        return entry.isFile();
-      }
-    }).map((file) => file.name);
-
-    let e = undefined;
-    let v = undefined;
+    // get files ONLY
+    const files = entries.filter((entry) => entry.isFile()).map((file) => file.name);
 
     if (error) {
-      e = new Error(`Error from local.store: failed to read directory`);
-    } else {
-      const promises = [];
-      for (let i=0; i<files.length; i++) {
-        promises.push(new Promise((resolve, reject) => {
-          let name = directories ? files[i] : path.basename(files[i], path.extname(files[i]));
-
-          // if only collecting keys
-          if (!includeValues) {
-            resolve(name);
-          } else { // otherwise, add a key-value pair
-            let filePath = path.join(dirPath, files[i]);
-            fs.readFile(filePath, 'utf-8', (error, data) => {
-              if (error) {
-                reject(error);
-              } else {
-                let pair = {};
-                pair[name] = util.deserialize(data);
-                resolve(pair);
-              }
-            });
-          }
-        }));
-      }
-
-      Promise.all(promises).then((results) => {
-        cb(undefined, results);
-      }).catch((error) => {
-        // console.log(global.distribution.util.id.getSID(global.nodeConfig), error);
-        cb(new Error('Unexpected error from readFilesFromDirectory'), undefined);
-      });
+      console.log("b1", error);
+      cb(new Error(`Local.store: failed to read directory`), undefined);
+      return;
     }
+
+    const promises = [];
+    for (let i=0; i<files.length; i++) {
+      promises.push(new Promise((resolve, reject) => {
+        const name = path.basename(files[i], path.extname(files[i]));
+
+        // if only collecting keys...
+        if (!includeValues) {
+          resolve(name);
+          return;
+        }
+
+        // otherwise, get the values as well
+        const filePath = path.join(dirPath, files[i]);
+        fs.readFile(filePath, 'utf-8', (error, data) => {
+          if (error) {
+            console.log("b6", error);
+            reject(error);
+            return;
+          }
+
+          // collect lines in a list
+          let v = data.split(/\r?\n/)
+              .filter((line) => line.trim() !== '')
+              .map((line) => global.distribution.util.deserialize(line));
+
+          if (v.length === 1) {
+            v = v[0];
+          }
+
+          const pair = {};
+          pair[name] = v;
+          resolve(pair);
+        });
+      }));
+    }
+
+    Promise.all(promises).then((results) => {
+      cb(undefined, results);
+    }).catch((error) => {
+      cb(new Error('Unexpected error from readFilesFromDirectory'), undefined);
+    });
   });
 }
 
 store.checkdir = (root, gid) => {
-  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  const temp = ['store', global.distribution.util.id.getSID(global.nodeConfig)];
   if (gid) {
     temp.push(gid);
   }
-  root = [...temp, ...root];
-  const dirPath = path.join(dir, ...root);
+  const dirPath = path.join(global.distribution.dir, ...temp, ...root);
   return fs.existsSync(dirPath);
-}
+};
 
-store.get = (key, root, cb, includeValues = false, directories = false) => {
-  const temp = ['store', util.id.getSID(global.nodeConfig)];
+store.get = (key, root, cb, includeValues=false) => {
+  cb = cb || function() {};
+
+  const temp = ['store', global.distribution.util.id.getSID(global.nodeConfig)];
   if (key !== null && key.hasOwnProperty('gid')) {
     temp.push(key.gid);
   }
-  root = [...temp, ...root];
-  const dirPath = path.join(dir, ...root);
+  const dirPath = path.join(global.distribution.dir, ...temp, ...root);
 
   // if the key is null, return all of the keys
   if (key === null || (key.hasOwnProperty('key') && key.key === null)) {
-    readFilesFromDirectory(dirPath, cb, includeValues, directories);
+    readFilesFromDirectory(dirPath, cb, includeValues);
     return;
   }
 
@@ -95,32 +98,43 @@ store.get = (key, root, cb, includeValues = false, directories = false) => {
     filePath = path.join(dirPath, `${key}.txt`);
   }
 
-  fs.readFile(filePath, 'utf-8', (err, data) => {
-    let e = undefined;
-    let v = undefined;
+  // if the file doesn't exist, return an error
+  if (!fs.existsSync(filePath)) {
+    cb(new Error('Local.store.get: key does not exist'), undefined);
+    return;
+  }
 
-    if (err) {
-      e = new Error(`Error from local.store.get: failed to read file`);
-    } else {
-      v = util.deserialize(data);
+  fs.readFile(filePath, 'utf-8', (error, data) => {
+    if (error) {
+      cb(new Error('Local.store.get: failed to read file'), undefined);
+      return;
     }
 
-    if (cb) {
-      cb(e, v);
+    // read the list of values and remove any empty lines
+    let v = data.split(/\r?\n/)
+        .filter((line) => line.trim() !== '')
+        .map((line) => global.distribution.util.deserialize(line));
+
+    // if the length is zero, get rid of list
+    if (v.length === 1) {
+      v = v[0];
     }
+
+    cb(undefined, v);
   });
 };
 
 store.put = (value, key, root, cb) => {
-  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  cb = cb || function() {};
+
+  const temp = ['store', global.distribution.util.id.getSID(global.nodeConfig)];
   if (key !== null && key.hasOwnProperty('gid')) {
     temp.push(key.gid);
   }
-  root = [...temp, ...root];
   // get the directory path
-  let dirPath = path.join(dir, ...root);
+  let dirPath = path.join(global.distribution.dir, ...temp, ...root);
 
-  // add key.gid if the key is for a group
+  // update the name of the key if it is for a group
   if (key !== null && typeof key === 'object') {
     key = key.key;
   }
@@ -131,31 +145,24 @@ store.put = (value, key, root, cb) => {
   // append the file's name
   const filePath = path.join(dirPath, `${key}.txt`);
 
-  // write to the file (overwrite existing key if needed)
-  fs.writeFile(filePath, util.serialize(value), (error) => {
-    let e = undefined;
-    let v = undefined;
-
-    if (error) {
-      e = new Error(`Error from local.store.put: failed to write to file`);
-    } else {
-      v = value;
-    }
-
-    if (cb) {
-      cb(e, v);
-    }
-  });
+  // add the value to the end of the file (does not overwrite the existing key!)
+  try {
+    fs.appendFileSync(filePath, `${global.distribution.util.serialize(value)}\n`);
+    cb(undefined, value);
+  } catch (error) {
+    cb(new Error(`Local.store.put: failed to write to file`), undefined);
+  }
 };
 
 store.del = (key, root, cb) => {
-  const temp = ['store', util.id.getSID(global.nodeConfig)];
+  cb = cb || function() {};
+
+  const temp = ['store', global.distribution.util.id.getSID(global.nodeConfig)];
   if (key !== null && key.hasOwnProperty('gid')) {
     temp.push(key.gid);
   }
-  root = [...temp, ...root];
   // get the directory path
-  let dirPath = path.join(dir, ...root);
+  const dirPath = path.join(global.distribution.dir, ...temp, ...root);
 
   // add key.gid if the key is for a group
   if (typeof key === 'object') {
@@ -164,38 +171,39 @@ store.del = (key, root, cb) => {
 
   const filePath = path.join(dirPath, `${key}.txt`);
 
-  // check if the file exists
+  // check if the file exists; if not, returned undefined
+  // result
   if (!fs.existsSync(filePath)) {
-    if (cb) {
-      cb(undefined, undefined);
-    }
+    cb(undefined, undefined);
     return;
   }
 
   // read the value (for the callback)
   fs.readFile(filePath, 'utf-8', (error, data) => {
-    let e = undefined;
-    let v = undefined;
     if (error) {
-      e = new Error(`Error from local.store.del: failed to read file`);
-      if (cb) {
-        cb(e, undefined);
-      }
-    } else {
-      v = util.deserialize(data);
-
-      // unlink (ie. remove) the file
-      fs.unlink(filePath, (error) => {
-        if (error) {
-          e = new Error(`Error from local.store.del: failed to unlink`);
-          v = undefined;
-        }
-
-        if (cb) {
-          cb(e, v);
-        }
-      });
+      cb(new Error('Local.store.del: failed to read file'), undefined);
+      return;
     }
+
+    // read the list of values and remove any empty lines
+    let v = data.split(/\r?\n/)
+        .filter((line) => line.trim() !== '')
+        .map((line) => global.distribution.util.deserialize(line));
+
+    // if the length is zero, get rid of list
+    if (v.length === 1) {
+      v = v[0];
+    }
+
+    // unlink the file
+    fs.unlink(filePath, (error) => {
+      if (error) {
+        console.log("b5", error);
+        cb(new Error(`Local.store.del: failed to unlink`), undefined);
+        return;
+      }
+      cb(undefined, v);
+    });
   });
 };
 
