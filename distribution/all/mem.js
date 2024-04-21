@@ -1,3 +1,3 @@
-const memory = require('../util/memory');
+const memory = require('../util/storage');
 
 module.exports = memory('mem');
