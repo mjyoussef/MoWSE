@@ -144,7 +144,7 @@ test('vecStore', (done) => {
     vec: embed('This is about Computer Science'),
   };
 
-  queryTerm = 'Europe';
+  queryTerm = 'school';
   query = embed(queryTerm);
   count = 3;
 

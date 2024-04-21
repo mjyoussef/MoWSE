@@ -58,10 +58,8 @@ const vecStore = (config) => {
             method: 'query',
           };
 
-          const keyObj = { key: key, k: k };
-
           promises.push(new Promise((resolve, reject) => {
-            local.comm.send([keyObj], remote, (e, v) => {
+            local.comm.send([{key: key, k: k }], remote, (e, v) => {
               if (e) {
                 resolve([]);
               } else {
@@ -74,7 +72,10 @@ const vecStore = (config) => {
           results = results.flat();
           results.sort((a, b) => {
             return a.cosineSim - b.cosineSim;
-          }).reverse().slice(0, k).map(result => result.url);
+          });
+          results = results.reverse();
+          results = results.slice(0, k);
+          results = results.map(result => result.url);
           if (cb) {
             cb(undefined, results);
           }
