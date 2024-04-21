@@ -1,5 +1,3 @@
-const { callbackify } = require("util");
-
 const util = global.distribution.util;
 const local = global.distribution.local;
 
