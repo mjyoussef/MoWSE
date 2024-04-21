@@ -12,18 +12,9 @@ afterEach(() => {
 // This group is used for testing most of the functionality
 const mygroupGroup = {};
 
-
-/*
-   This hack is necessary since we can not
-   gracefully stop the local listening node.
-   This is because the process that node is
-   running in is the actual jest process
-*/
-let localServer = null;
-
-const n1 = {ip: '127.0.0.1', port: 8000};
-const n2 = {ip: '127.0.0.1', port: 8001};
-const n3 = {ip: '127.0.0.1', port: 8002};
+const n1 = {ip: '127.0.0.1', port: 8001};
+const n2 = {ip: '127.0.0.1', port: 8002};
+const n3 = {ip: '127.0.0.1', port: 8003};
 
 jest.setTimeout(1000*60*10)
 
@@ -122,41 +113,48 @@ test('all.comm.send(index.embed(text))', (done) => {
   });
 });
 
-// test('vecStore', (done) => {
-//   const remote = {service: 'index', method: 'embed'};
-//   d1 = {url: 'https://1', vec: [0, 0, 0, 1]};
-//   d2 = {url: 'https://2', vec: [0, 0, 0, 0.8]};
-//   d3 = {url: 'https://3', vec: [0, 0, 0.2, 1]};
-//   d4 = {url: 'https://4', vec: [1, 1, 0.1, 1]};
-//   d5 = {url: 'https://5', vec: [0.7, 0.25, 1, 1]};
-//   d6 = {url: 'https://6', vec: [0, 0.1, 0.8, 1]};
-//   d7 = {url: 'https://7', vec: [1, 0, 1, 1]};
+test('vecStore', (done) => {
+  length = 50;
+  d1 = {url: 'https://1', vec: Array.from({length: length}, () => Math.random())};
+  d2 = {url: 'https://2', vec: Array.from({length: length}, () => Math.random())};
+  d3 = {url: 'https://3', vec: Array.from({length: length}, () => Math.random())};
+  d4 = {url: 'https://4', vec: Array.from({length: length}, () => Math.random())};
+  d5 = {url: 'https://5', vec: Array.from({length: length}, () => Math.random())};
+  d6 = {url: 'https://6', vec: Array.from({length: length}, () => Math.random())};
+  d7 = {url: 'https://7', vec: Array.from({length: length}, () => Math.random())};
 
-//   query = [0, 0, 0, 0];
-//   count = 3;
+  query = Array.from({length: length}, () => Math.random());
+  count = 3;
 
-//   distribution.mygroup.vecStore.put(d1, (e, v) => {
-//     distribution.mygroup.vecStore.put(d2, (e, v) => {
-//       distribution.mygroup.vecStore.put(d3, (e, v) => {
-//         distribution.mygroup.vecStore.put(d4, (e, v) => {
-//           distribution.mygroup.vecStore.put(d5, (e, v) => {
-//             distribution.mygroup.vecStore.put(d6, (e, v) => {
-//               distribution.mygroup.vecStore.put(d7, (e, v) => {
-//                 distribution.mygroup.vecStore.query(query, (e, v) => {
-//                   try {
-//                     expect(e).toBeFalsy();
-//                     expect(v.length).toEqual(count);
-//                     console.log(v);
-//                     done();
-//                   } catch (error) {
-//                     done(error);
-//                   }
-//                 }, k=count);
-//               });
-//             });
-//           });
-//         });
-//       });
-//     });
-//   });
-// });
+  distribution.mygroup.vecStore.put(d1.url, d1.vec, (e, v) => {
+    expect(e).toBeFalsy();
+    distribution.mygroup.vecStore.put(d2.url, d2.vec, (e, v) => {
+      expect(e).toBeFalsy();
+      distribution.mygroup.vecStore.put(d3.url, d3.vec, (e, v) => {
+        expect(e).toBeFalsy();
+        distribution.mygroup.vecStore.put(d4.url, d4.vec, (e, v) => {
+          expect(e).toBeFalsy();
+          distribution.mygroup.vecStore.put(d5.url, d5.vec, (e, v) => {
+            expect(e).toBeFalsy();
+            distribution.mygroup.vecStore.put(d6.url, d6.vec, (e, v) => {
+              expect(e).toBeFalsy();
+              distribution.mygroup.vecStore.put(d7.url, d7.vec, (e, v) => {
+                expect(e).toBeFalsy();
+                distribution.mygroup.vecStore.query(query, (e, v) => {
+                  try {
+                    expect(e).toBeFalsy();
+                    expect(v.length).toEqual(count);
+                    console.log(`Top ${count} results: ${v}`);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                }, k=count);
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});

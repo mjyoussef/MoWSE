@@ -49,7 +49,12 @@ function cosineSim(vector1, vector2) {
   magnitude1 = Math.sqrt(magnitude1);
   magnitude2 = Math.sqrt(magnitude2);
 
-  return dotProduct / (magnitude1 * magnitude2);
+  result = dotProduct / (magnitude1 * magnitude2);
+  if (isNaN(result)) {
+    return 0;
+  }
+  // console.log(`Cosine similarity: ${result} for vectors ${vector1} and ${vector2}`)
+  return result;
 };
 
 module.exports = {
@@ -58,5 +63,5 @@ module.exports = {
   id: id,
   wire: wire,
   loadGloVeEmbeddings: loadGloVeEmbeddings,
-  calculateCosineSimilarity: cosineSim,
+  cosineSim: cosineSim,
 };

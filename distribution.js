@@ -90,7 +90,15 @@ global.distribution.vecStoreTemplate = require("./distribution/all/vecStore.js")
 
 module.exports = global.distribution;
 
-// folderPath = './distribution/util/glove_50d_split';
+
+console.log('Starting vectordb');
+global.distribution.local.vecStore.init((e, v) => {
+  if (e) {
+    console.log(e);
+  } else {
+    console.log(v);
+  }
+});
 folderPath = './distribution/util/glove_50d_split';
 global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
   if (e) {
@@ -99,14 +107,6 @@ global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
     console.log(v);
   }
 });
-// console.log('Starting local vectorDB');
-// global.distribution.local.vecStore.init((e, v) => {
-//   if (e) {
-//     console.log(e);
-//   } else {
-//     console.log(v);
-//   }
-// });
 
 
 /* The following code is run when distribution.js is run directly */

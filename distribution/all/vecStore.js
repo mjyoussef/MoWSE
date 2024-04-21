@@ -1,10 +1,11 @@
+const { callbackify } = require("util");
+
 const util = global.distribution.util;
+const local = global.distribution.local;
 
 function sendToNode(gid, hash, nodes, method, key, optionalArgs, cb) {
   const kid = util.id.getID(key);
   const nid = hash(kid, Object.keys(nodes));
-  const cosineSim = global.distribution.util.cosineSim;
-
 
   // arguments
   const args = optionalArgs || [];
@@ -46,12 +47,12 @@ const vecStore = (config) => {
           }
           return;
         }
-
         sendToNode(gid, hash, nodes, 'put', key, [value], cb);
       });
     },
-    query:(key, cb, k=5) => {
+    query: (key, cb, k=5) => {
       // replace with a MR framework
+      console.log('querying');
       local.groups.get(gid, (e, nodes) => {
         if (e) {
           if (cb) {
@@ -60,32 +61,46 @@ const vecStore = (config) => {
           return;
         }
 
-        const results = [];
-
+        const promises = [];
         for (const nid in nodes) {
+
           const remote = {
             node: nodes[nid],
             service: 'vecStore',
             method: 'query',
           };
+
           const keyObj = {
             key: key,
             k: k
           };
-          local.comm.send([keyObj], remote, (e, v) => {
-            if (e) {
-              if (cb) {
-                cb(new Error('Error from all.vecStore.query: failed to query'), undefined);
-              }
-              return;
-            }
 
-            results.push(v);
+          promises.push(new Promise((resolve, reject) => {
+            local.comm.send([keyObj], remote, (e, v) => {
+              if (e) {
+                resolve([]);
+              } else {
+                resolve(v);
+              }
+            });
+          }));
+
+          Promise.all(promises).then((results) => {
+            results = results.flat();
+            results.sort((a, b) => {
+              return a.cosineSim - b.cosineSim;
+            });
+            console.log(results);
+            results = results.slice(-k);
+            results = results.map(result => result.url);
+            if (cb) {
+              cb(undefined, results);
+            }
+          }).catch((error) => {
+            if (cb) {
+              cb(new Error('Error from all.vecStore.query: failed to resolve promises: ', error), undefined);
+            }
           });
-        }
-        const closestVectors = findClosestVectors(key, results, k);
-        if (cb) {
-          cb(null, closestVectors);
         }
       });
     },

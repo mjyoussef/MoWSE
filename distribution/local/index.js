@@ -30,6 +30,7 @@ function embed(doc, callback, tfidf=false) {
       } else {
         for (let i = 0; i < sum.length; i++) {
           sum[i] += info.vec[i] * weight;
+          sum[i] = sum[i].toFixed(4);
         }
       }
     }
@@ -51,6 +52,7 @@ function embed(doc, callback, tfidf=false) {
       const length = words.length;
       for (let i = 0; i < sum.length; i++) {
         sum[i] /= length;
+        sum[i] = sum[i].toFixed(4);
       }
     }
     callback(null, sum);

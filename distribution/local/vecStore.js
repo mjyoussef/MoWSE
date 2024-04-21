@@ -1,9 +1,15 @@
 const cosineSim = global.distribution.util.cosineSim;
-// import { LocalIndex } from 'vectra';
+const db = require('vectordb');
+const ip = global.nodeConfig.ip;
+const port = global.nodeConfig.port;
 
 async function init(callback) {
   try {
-    global.distribution.vecStore = new LocalIndex(path.join(__dirname, '..', 'index'));
+    const local_db = await db.connect(`${ip}:${port}/vectordb`);
+    global.distribution.vecStore = await local_db.createTable("vecStore", [{
+      vector: Array.from({length: 50}, () => 0),
+      url: "https://www.google.com",
+    }], { writeMode: db.WriteMode.Overwrite });
     callback(null, 'vectorDB initialized successfully');
   } catch (error) {
     callback(error, null);
@@ -11,24 +17,44 @@ async function init(callback) {
 }
 
 async function put(key, value, callback) {
-  await index.insertItem({
-    vector: key,
-    metadata: { value }
-  });
-  callback(null, 'added');
+  const local_db = await db.connect(`${ip}:${port}/vectordb`);
+  names = await local_db.tableNames();
+  if (!names.includes('vecStore')) {
+    global.distribution.vecStore = await local_db.createTable("vecStore", [{
+      vector: key,
+      url: value.key,
+    }], { writeMode: db.WriteMode.Overwrite });
+    callback(null, 'added');
+  } else {
+    // comment out when fully distributed
+    global.distribution.vecStore = await local_db.openTable("vecStore");
+    await global.distribution.vecStore.add([{
+      vector: key,
+      url: value.key,
+    }]);
+    callback(null, 'added');
+    return;
+  }
 }
 
 async function query(key, callback, k=5) {
-  const results = await index.queryItems(key, k);
+  // comment out when fully distributed
+  const local_db = await db.connect(`${ip}:${port}/vectordb`);
+  global.distribution.vecStore = await local_db.openTable("vecStore");
+  const results = await global.distribution.vecStore.search(key.key).limit(key.k).execute();
   const topResults = results.map(result => ({
-    vector: result.vector,
-    cosineSim: cosineSim(key, result.vector)
+    url: result.url,
+    cosineSim: cosineSim(key.key, result.vector)
   })).sort((a, b) => b.cosineSim - a.cosineSim);
-  callback(null, topResults.slice(0, k));
+  const top = topResults.slice(0, key.k);
+  if (callback) {
+    callback(null, top);
+  }
+  return;
 }
 
 module.exports = {
   init: init,
   put: put,
-  query: query
+  query: query,
 };
