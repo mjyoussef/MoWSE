@@ -5,7 +5,7 @@ const gossip = require('./gossip');
 const mem = require('./mem');
 const store = require('./store');
 const mr = require('./mr');
-const vecStore = require('./vecStore');
+const vecStore = require('./vecStore.js');
 const index = require('./index');
 
 const routesStore = new Map();

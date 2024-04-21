@@ -1,12 +1,12 @@
-index = {}
+const index = {}
 
 function embed(doc, callback, tfidf=false) {
-  global.distribution.documents += 1;
   let model = global.distribution.embeddings;
   let words = doc.toLowerCase().split(' ');
   let stopwords = global.distribution.stopwords;
   words = words.filter((word) => !stopwords.includes(word));
   if (tfidf) {
+    global.distribution.documents += 1;
     let sum = null;
     let total = 0;
     vectors = {};

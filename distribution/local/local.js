@@ -36,7 +36,7 @@ const gossip = require('./gossip');
 const mr = require('./mr');
 
 /* vecStore service */
-const vecStore = require('./vecStore');
+const vecStore = require('./vecStore.js');
 
 /* index embedding service */
 const index = require('./index');

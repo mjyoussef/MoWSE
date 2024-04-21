@@ -1,6 +1,10 @@
+const util = global.distribution.util;
+
 function sendToNode(gid, hash, nodes, method, key, optionalArgs, cb) {
   const kid = util.id.getID(key);
   const nid = hash(kid, Object.keys(nodes));
+  const cosineSim = global.distribution.util.cosineSim;
+
 
   // arguments
   const args = optionalArgs || [];
@@ -18,8 +22,8 @@ function sendToNode(gid, hash, nodes, method, key, optionalArgs, cb) {
 
 function findClosestVectors(key, results, k) {
   results.sort((a, b) => {
-    const similarityA = calculateCosineSimilarity(key, a.vector);
-    const similarityB = calculateCosineSimilarity(key, b.vector);
+    const similarityA = cosineSim(key, a.vector);
+    const similarityB = cosineSim(key, b.vector);
     return similarityB - similarityA;
   });
 

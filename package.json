@@ -20,7 +20,9 @@
   "license": "ISC",
   "dependencies": {
     "@pinecone-database/pinecone": "^2.2.0",
+    "vector-storage": "^1.0.55",
     "vectordb": "^0.4.16",
+    "vectra": "^0.7.6",
     "yargs": "^17.7.2"
   }
 }
