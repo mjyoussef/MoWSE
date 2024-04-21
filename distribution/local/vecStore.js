@@ -7,8 +7,8 @@ async function init(callback) {
   try {
     const local_db = await db.connect(`${ip}:${port}/vectordb`);
     global.distribution.vecStore = await local_db.createTable("vecStore", [{
-      vector: Array.from({length: 50}, () => 0),
-      url: "https://www.google.com",
+      vector: Array.from({length: 50}, () => 0.0),
+      url: "",
     }], { writeMode: db.WriteMode.Overwrite });
     callback(null, 'vectorDB initialized successfully');
   } catch (error) {
@@ -42,10 +42,11 @@ async function query(key, callback, k=5) {
   const local_db = await db.connect(`${ip}:${port}/vectordb`);
   global.distribution.vecStore = await local_db.openTable("vecStore");
   const results = await global.distribution.vecStore.search(key.key).limit(key.k).execute();
-  const topResults = results.map(result => ({
+  let topResults = results.map(result => ({
     url: result.url,
     cosineSim: cosineSim(key.key, result.vector)
-  })).sort((a, b) => b.cosineSim - a.cosineSim);
+  })).sort((a, b) => a.cosineSim - b.cosineSim);
+  topResults = topResults.reverse();
   const top = topResults.slice(0, key.k);
   if (callback) {
     callback(null, top);

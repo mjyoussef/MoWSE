@@ -72,24 +72,23 @@ const vecStore = (config) => {
               }
             });
           }));
-
-          Promise.all(promises).then((results) => {
-            results = results.flat();
-            results.sort((a, b) => {
-              return a.cosineSim - b.cosineSim;
-            });
-            console.log(results);
-            results = results.slice(-k);
-            results = results.map(result => result.url);
-            if (cb) {
-              cb(undefined, results);
-            }
-          }).catch((error) => {
-            if (cb) {
-              cb(new Error('Error from all.vecStore.query: failed to resolve promises: ', error), undefined);
-            }
-          });
         }
+        Promise.all(promises).then((results) => {
+          results = results.flat();
+          results.sort((a, b) => {
+            return a.cosineSim - b.cosineSim;
+          });
+          results = results.reverse();
+          results = results.slice(0, k);
+          results = results.map(result => result.url);
+          if (cb) {
+            cb(undefined, results);
+          }
+        }).catch((error) => {
+          if (cb) {
+            cb(new Error('Error from all.vecStore.query: failed to resolve promises: ', error), undefined);
+          }
+        });
       });
     },
   };

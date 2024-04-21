@@ -2,7 +2,6 @@ global.nodeConfig = {ip: '127.0.0.1', port: 8080};
 const { expect } = require('@jest/globals');
 const distribution = require('../distribution.js');
 const id = distribution.util.id;
-
 const groupsTemplate = require('../distribution/all/groups');
 
 afterEach(() => {
@@ -114,16 +113,39 @@ test('all.comm.send(index.embed(text))', (done) => {
 });
 
 test('vecStore', (done) => {
+  embed = distribution.local.index.embed;
   length = 50;
-  d1 = {url: 'https://1', vec: Array.from({length: length}, () => Math.random())};
-  d2 = {url: 'https://2', vec: Array.from({length: length}, () => Math.random())};
-  d3 = {url: 'https://3', vec: Array.from({length: length}, () => Math.random())};
-  d4 = {url: 'https://4', vec: Array.from({length: length}, () => Math.random())};
-  d5 = {url: 'https://5', vec: Array.from({length: length}, () => Math.random())};
-  d6 = {url: 'https://6', vec: Array.from({length: length}, () => Math.random())};
-  d7 = {url: 'https://7', vec: Array.from({length: length}, () => Math.random())};
+  d1 = {
+    url: 'https://en.wikipedia.org/wiki/Rome', 
+    vec: embed('This is about Rome'),
+  };
+  d2 = {
+    url:'https://en.wikipedia.org/wiki/Ancient_Rome',
+    vec: embed('This is about Ancient Rome'),
+  };
+  d3 = {
+    url: 'https://en.wikipedia.org/wiki/Greece',
+    vec: embed('This is about Greece'),
+  };
+  d4 = {
+    url: 'https://en.wikipedia.org/wiki/Kingdom_of_Greece',
+    vec: embed('This is about the Kingdom of Greece'),
+  };
+  d5 = {
+    url: 'https://en.wikipedia.org/wiki/Pizza',
+    vec: embed('This is about Pizza'),
+  };
+  d6 = {
+    url: 'https://en.wikipedia.org/wiki/Brown_University',
+    vec: embed('This is about Brown University'),
+  };
+  d7 = {
+    url: 'https://en.wikipedia.org/wiki/Computer_science',
+    vec: embed('This is about Computer Science'),
+  };
 
-  query = Array.from({length: length}, () => Math.random());
+  queryTerm = 'Europe';
+  query = embed(queryTerm);
   count = 3;
 
   distribution.mygroup.vecStore.put(d1.url, d1.vec, (e, v) => {
@@ -144,7 +166,11 @@ test('vecStore', (done) => {
                   try {
                     expect(e).toBeFalsy();
                     expect(v.length).toEqual(count);
-                    console.log(`Top ${count} results: ${v}`);
+                    let msg = `Top ${count} results for '${queryTerm}':`
+                    for (let i = 0; i < count; i++) {
+                      msg += `\n  ${v[i]}`;
+                    }
+                    console.log(msg);
                     done();
                   } catch (error) {
                     done(error);

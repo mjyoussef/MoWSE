@@ -30,11 +30,17 @@ function embed(doc, callback, tfidf=false) {
       } else {
         for (let i = 0; i < sum.length; i++) {
           sum[i] += info.vec[i] * weight;
-          sum[i] = sum[i].toFixed(4);
+          sum[i] = sum[i];
         }
       }
     }
-    callback(null, sum);
+    if (sum !== null) {
+      sum = Array.from({length: 50}, () => 0.0)
+    }
+    if (callback) {
+      callback(null, sum);
+    }
+    return sum;
   } else {
     let sum = null;
     for (word of words) {
@@ -52,10 +58,15 @@ function embed(doc, callback, tfidf=false) {
       const length = words.length;
       for (let i = 0; i < sum.length; i++) {
         sum[i] /= length;
-        sum[i] = sum[i].toFixed(4);
+        sum[i] = sum[i];
       }
+    } else {
+      sum = Array.from({length: 50}, () => 0.0)
     }
-    callback(null, sum);
+    if (callback) {
+      callback(null, sum);
+    }
+    return sum;
   }
 }
 
