@@ -36,7 +36,7 @@ const store = require('./store');
 const mr = require('./mr');
 
 /* vecStore Service */
-const mr = require('./vecStore');
+const vecStore = require('./vecStore');
 
 module.exports = {
   comm: comm,

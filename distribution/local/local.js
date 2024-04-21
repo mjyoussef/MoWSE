@@ -36,7 +36,10 @@ const gossip = require('./gossip');
 const mr = require('./mr');
 
 /* vecStore service */
-const mr = require('./vecStore');
+const vecStore = require('./vecStore');
+
+/* index embedding service */
+const index = require('./index');
 
 module.exports = {
   status: status,
@@ -48,4 +51,5 @@ module.exports = {
   store: store,
   mr: mr,
   vecStore: vecStore,
+  index: index,
 };

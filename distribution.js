@@ -2,6 +2,7 @@
 
 const util = require("./distribution/util/util.js");
 const args = require("yargs").argv;
+const fs = require("fs");
 
 // Default configuration
 global.nodeConfig = global.nodeConfig || {
@@ -87,7 +88,7 @@ global.distribution.mrTemplate = require("./distribution/all/mr");
 module.exports = global.distribution;
 
 // folderPath = './distribution/util/glove_50d_split';
-folderPath = './distribution/util/glove_50d_test';
+folderPath = './distribution/util/glove_50d_split';
 global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
   if (e) {
     console.log(e);

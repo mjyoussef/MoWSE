@@ -1,12 +1,15 @@
-const lancedb = require("vectordb");
-const uri = 'vecStore';
-const db = await lancedb.connect(uri);
+// import * as lancedb from "vectordb";
+// import { Schema, Field } from "apache-arrow";
 
-const schema = new Schema([
-  new Field('url', new Utf8()),
-]);
-
-global.distribution.vecStore = await db.createTable({ name: 'vecStore', schema });
+async function init() {
+  const lancedb = require("vectordb");
+  global.distribution.vecStore = await lancedb.connect('vecStore');
+  const schema = new Schema([
+    new Field('url', new Utf8()),
+  ]);
+  args = { name: 'vecStore', schema }
+  global.distribution.vecStore = await db.createTable(args);
+}
 
 async function put(key, value, callback) {
   const newData = { vector: key, url: value};
@@ -20,6 +23,7 @@ async function query(key, callback, k=5) {
 }
 
 module.exports = {
+  init: init,
   put: put,
   query: query
 };
