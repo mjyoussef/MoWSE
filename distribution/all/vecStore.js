@@ -21,16 +21,6 @@ function sendToNode(gid, hash, nodes, method, key, optionalArgs, cb) {
   local.comm.send(args, remote, cb);
 }
 
-function findClosestVectors(key, results, k) {
-  results.sort((a, b) => {
-    const similarityA = cosineSim(key, a.vector);
-    const similarityB = cosineSim(key, b.vector);
-    return similarityB - similarityA;
-  });
-
-  return results.slice(0, k);
-};
-
 const vecStore = (config) => {
   const gid = config.gid || 'all';
   const hash = config.hash || util.id.naiveHash;
