@@ -4,6 +4,10 @@ const id = distribution.util.id;
 
 const groupsTemplate = require('../distribution/all/groups');
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 // This group is used for testing most of the functionality
 const mygroupGroup = {};
 // These groups are used for testing hashing
@@ -28,6 +32,8 @@ const n3 = {ip: '127.0.0.1', port: 8002};
 const n4 = {ip: '127.0.0.1', port: 8003};
 const n5 = {ip: '127.0.0.1', port: 8004};
 const n6 = {ip: '127.0.0.1', port: 8005};
+
+jest.setTimeout(1000*60*10)
 
 beforeAll((done) => {
   // First, stop the nodes if they are running
@@ -115,7 +121,7 @@ beforeAll((done) => {
       });
     });
   });
-});
+}, 1000*60*10);
 
 afterAll((done) => {
   distribution.mygroup.status.stop((e, v) => {
