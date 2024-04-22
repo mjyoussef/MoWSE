@@ -16,9 +16,9 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = { ip: "127.0.0.1", port: 7113 };
-const n2 = { ip: "127.0.0.1", port: 7114 };
-const n3 = { ip: "127.0.0.1", port: 7115 };
+const n1 = { ip: "127.0.0.1", port: 7110 };
+const n2 = { ip: "127.0.0.1", port: 7111 };
+const n3 = { ip: "127.0.0.1", port: 7112 };
 
 ////////////////
 // BEFORE ALL //
@@ -92,10 +92,12 @@ const crawl_map = (key, value) => {
                 }
               }
 
-              if (urlSet.length > 25) {
+              if (urlSet.size > 25) {
                 break;
               }
             }
+
+            console.log("URL SET LENGTH", urlSet.size);
 
             const o = {};
             o[title] = [...urlSet];
@@ -157,7 +159,7 @@ const crawl_reduce = (key, values) => {
 // Workflow //
 //////////////
 
-const URLCOUNT = 1000;
+const URLCOUNT = 400;
 
 const doMapReduce = (cb, total = 0, id = 0) => {
   distribution.crawl.mr.exec(
