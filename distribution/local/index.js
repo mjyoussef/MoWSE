@@ -2,6 +2,7 @@ const index = {}
 
 function embed(doc, callback, tfidf=false) {
   let model = global.distribution.embeddings;
+  // console.log(doc);
   let words = doc.toLowerCase().split(' ');
   let stopwords = global.distribution.stopwords;
   words = words.filter((word) => !stopwords.includes(word));

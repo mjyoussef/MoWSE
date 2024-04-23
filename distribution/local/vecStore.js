@@ -6,10 +6,15 @@ const port = global.nodeConfig.port;
 async function init(callback) {
   try {
     const local_db = await db.connect(`${ip}:${port}/vectordb`);
-    global.distribution.vecStore = await local_db.createTable("vecStore", [{
-      vector: Array.from({length: 50}, () => 0.0),
-      url: "",
-    }], { writeMode: db.WriteMode.Overwrite });
+    names = await local_db.tableNames();
+    if (!names.includes('vecStore')) {
+      global.distribution.vecStore = await local_db.createTable("vecStore", [{
+        vector: Array.from({length: 50}, () => 0.0),
+        url: "",
+      }], { writeMode: db.WriteMode.Overwrite });
+    } else {
+      global.distribution.vecStore = await local_db.openTable("vecStore");
+    }
     callback(null, 'vectorDB initialized successfully');
   } catch (error) {
     callback(error, null);
