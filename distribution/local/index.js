@@ -4,7 +4,7 @@ function embed(doc, callback, tfidf=false) {
   let model = global.distribution.embeddings;
   let words = doc.toLowerCase().split(' ');
   let stopwords = global.distribution.stopwords;
-  words = words.filter((word) => !stopwords.includes(word));
+  words = words.filter((word) => !stopwords.includes(word)); // includes is linear time, can we speed this up using a set instead?
   if (tfidf) {
     global.distribution.documents += 1;
     let sum = null;
@@ -20,10 +20,10 @@ function embed(doc, callback, tfidf=false) {
         total += 1;
       }
     }
-    for (const [word, info] of Object.entries(vectors)) {
+    for (const [word, info] of Object.entries(vectors)) { // idf is only accurate if run after crawling it seems. We can maintain the global values, but calculate the weight in the reduce phase of the crawler
       global.distribution.tfidf[word] += 1;
       tf = info.count / total;
-      idf = Math.log(global.distribution.documents / global.distribution.tfidf[word]);
+      idf = Math.log(global.distribution.documents / global.distribution.tfidf[word]); // idf must be computed after all documents, otherwise we will have super high idf for some documents
       weight = tf * idf
       if (sum === null) {
         sum = info.vec.map((x) => x * weight);
@@ -58,7 +58,7 @@ function embed(doc, callback, tfidf=false) {
       const length = words.length;
       for (let i = 0; i < sum.length; i++) {
         sum[i] /= length;
-        sum[i] = sum[i];
+        sum[i] = sum[i]; // ?
       }
     } else {
       sum = Array.from({length: 50}, () => 0.0)
