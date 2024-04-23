@@ -41,6 +41,9 @@ const vecStore = (config) => {
     query: (key, cb, k=5) => {
       // replace with a MR framework
       console.log('querying');
+      // console.log(JSON.stringify(key));
+      const embedded_query = local.index.embed(key);
+      // console.log(embedded_query);
       local.groups.get(gid, (e, nodes) => {
         if (e) {
           if (cb) {
@@ -59,7 +62,7 @@ const vecStore = (config) => {
           };
 
           promises.push(new Promise((resolve, reject) => {
-            local.comm.send([{key: key, k: k }], remote, (e, v) => {
+            local.comm.send([{key: embedded_query, k: k }], remote, (e, v) => {
               if (e) {
                 resolve([]);
               } else {

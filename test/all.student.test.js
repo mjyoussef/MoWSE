@@ -145,7 +145,6 @@ test('vecStore', (done) => {
   };
 
   queryTerm = 'school';
-  query = embed(queryTerm);
   count = 3;
 
   distribution.mygroup.vecStore.put(d1.url, d1.vec, (e, v) => {
