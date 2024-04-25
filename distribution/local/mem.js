@@ -2,7 +2,7 @@
 // each "level" of mapping has a dedicated 'subdirs' field
 // that stores subdirectories
 const mapping = {
-  'subdirs': {},
+  subdirs: {},
 };
 
 const mem = {};
@@ -11,14 +11,14 @@ function traverseMapping(root, createDirs) {
   let error = undefined;
   let obj = mapping;
 
-  for (let i=0; i<root.length; i++) {
-    obj = obj['subdirs'];
+  for (let i = 0; i < root.length; i++) {
+    obj = obj["subdirs"];
 
     if (obj[root[i]] === undefined) {
       if (createDirs) {
         // create the subdirectory and navigate to it
         obj[root[i]] = {
-          'subdirs': {},
+          subdirs: {},
         };
         obj = obj[root[i]];
       } else {
@@ -36,7 +36,7 @@ function traverseMapping(root, createDirs) {
 
 mem.get = (key, root, cb) => {
   // add the group to root
-  if (key !== null && typeof key === 'object') {
+  if (key !== null && typeof key === "object") {
     root.push(key.gid);
     key = key.key;
   }
@@ -53,12 +53,12 @@ mem.get = (key, root, cb) => {
   // if the key is null, return all keys
   if (key === null) {
     const keys = Object.keys(obj).filter((key) => {
-      return key !== 'subdirs';
+      return key !== "subdirs";
     });
 
     let e = undefined;
     if (keys.length === 0) {
-      let e = new Error('Error: no key found');
+      let e = new Error("Error: no key found");
     }
 
     if (cb) {
@@ -82,7 +82,7 @@ mem.get = (key, root, cb) => {
 
 mem.put = (value, key, root, cb) => {
   // add the group to root
-  if (key !== null && typeof key === 'object') {
+  if (key !== null && typeof key === "object") {
     root.push(key.gid);
     key = key.key;
   }
@@ -100,7 +100,7 @@ mem.put = (value, key, root, cb) => {
 
 mem.del = (key, root, cb) => {
   // add the group to root
-  if (key !== null && typeof key === 'object') {
+  if (key !== null && typeof key === "object") {
     root.push(key.gid);
     key = key.key;
   }

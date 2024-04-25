@@ -1,10 +1,9 @@
 const index = {};
 
-function embed(inputs, callback, tfidf=false) {
+function embed(inputs, callback, tfidf = false) {
   let model = global.distribution.embeddings;
   // console.log(doc);
   let stopwords = global.distribution.stopwords;
-  console.log(inputs);
   words = inputs.filter((word) => !stopwords.includes(word)); // includes is linear time, can we speed this up using a set instead?
   if (tfidf) {
     global.distribution.documents += 1;
@@ -14,17 +13,20 @@ function embed(inputs, callback, tfidf=false) {
     for (word of words) {
       if (word in model) {
         if (word in vectors) {
-          vectors[word] = {vec: model[word], count: vectors[word].count + 1};
+          vectors[word] = { vec: model[word], count: vectors[word].count + 1 };
         } else {
-          vectors[word] = {vec: model[word], count: 1};
+          vectors[word] = { vec: model[word], count: 1 };
         }
         total += 1;
       }
     }
-    for (const [word, info] of Object.entries(vectors)) { // idf is only accurate if run after crawling it seems. We can maintain the global values, but calculate the weight in the reduce phase of the crawler
+    for (const [word, info] of Object.entries(vectors)) {
+      // idf is only accurate if run after crawling it seems. We can maintain the global values, but calculate the weight in the reduce phase of the crawler
       global.distribution.tfidf[word] += 1;
       tf = info.count / total;
-      idf = Math.log(global.distribution.documents / global.distribution.tfidf[word]); // idf must be computed after all documents, otherwise we will have super high idf for some documents
+      idf = Math.log(
+        global.distribution.documents / global.distribution.tfidf[word]
+      ); // idf must be computed after all documents, otherwise we will have super high idf for some documents
       weight = tf * idf;
       if (sum === null) {
         sum = info.vec.map((x) => x * weight);
@@ -36,7 +38,7 @@ function embed(inputs, callback, tfidf=false) {
       }
     }
     if (sum !== null) {
-      sum = Array.from({length: 50}, () => 0.0);
+      sum = Array.from({ length: 50 }, () => 0.0);
     }
     if (callback) {
       callback(null, sum);
@@ -62,7 +64,7 @@ function embed(inputs, callback, tfidf=false) {
         sum[i] = sum[i]; // ?
       }
     } else {
-      sum = Array.from({length: 50}, () => 0.0);
+      sum = Array.from({ length: 50 }, () => 0.0);
     }
     if (callback) {
       callback(null, sum);
