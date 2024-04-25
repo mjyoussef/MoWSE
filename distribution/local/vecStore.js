@@ -22,6 +22,7 @@ async function init(callback) {
 }
 
 async function put(key, value, callback) {
+  console.log(JSON.stringify(value));
   const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
   names = await local_db.tableNames();
   if (!names.includes('vecStore')) {
@@ -44,8 +45,8 @@ async function put(key, value, callback) {
 
 async function query(key, callback) {
   // comment out when fully distributed
-  const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
-  global.distribution.vecStore = await local_db.openTable("vecStore");
+  // const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
+  // global.distribution.vecStore = await local_db.openTable("vecStore");
   const results = await global.distribution.vecStore.search(key.key).limit(key.k).execute();
   let topResults = results.map(result => ({
     url: result.url,
