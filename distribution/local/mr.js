@@ -43,6 +43,9 @@ mr.map = (args, cb) => {
       const reducersMap = {};
       for (let i=0; i<mapResults.length; i++) {
         let pair = mapResults[i];
+        if (pair === null || pair === undefined) {
+          continue;
+        }
         let reduceInputKey = Object.keys(pair)[0];
         let reduceInputKid = global.distribution.util.id.getID(reduceInputKey);
         let nid = global.distribution.util.id[args.hash](reduceInputKid, Object.keys(nodes));

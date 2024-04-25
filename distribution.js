@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const util = require('./distribution/util/util.js');
 const args = require('yargs').argv;
 
@@ -38,6 +37,7 @@ if (args.config) {
 
 global.distribution = {};
 global.distribution.url = require('url');
+global.distribution.URL = require('url').URL;
 global.distribution.path = require('path');
 global.distribution.fs = require('fs');
 global.distribution.dir = __dirname;
@@ -45,6 +45,9 @@ global.distribution.http = require('http');
 global.distribution.util = require('./distribution/util/util.js');
 global.distribution.local = require('./distribution/local/local.js');
 global.distribution.node = require('./distribution/local/node.js');
+global.distribution.parser = require('node-html-parser');
+global.distribution.cheerio = require('cheerio');
+global.distribution.htmlToText = require('html-to-text').htmlToText;
 
 global.distribution['all'] = {};
 global.distribution['all'].status =

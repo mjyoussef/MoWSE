@@ -9,13 +9,12 @@ const mr = function(config) {
         mrid: string,
         mapFn: function,
         reduceFn: function,
-        inputs: (optional); a list of keys to store before
+        inputs: (optional); a list of key-val pairs to store before
         beginning MapReduce
       }
       */
 
       cb = cb || function() {};
-
 
       global.distribution.local.groups.get(gid, async (e, nodes) => {
         if (e) {
