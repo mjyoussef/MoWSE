@@ -15,8 +15,6 @@ const n1 = {ip: '127.0.0.1', port: 8001};
 const n2 = {ip: '127.0.0.1', port: 8002};
 const n3 = {ip: '127.0.0.1', port: 8003};
 
-jest.setTimeout(1000*60*10)
-
 beforeAll((done) => {
   // First, stop the nodes if they are running
   let remote = {service: 'status', method: 'stop'};
