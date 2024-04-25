@@ -34,8 +34,7 @@ status.stop = (callback) => {
     process.exit(0);
   }, 100);
 
-  callback = callback || function(e, v) {};
-  callback(undefined, global.nodeConfig);
+  callback(null, global.nodeConfig);
 };
 
 status.spawn = (configuration, callback) => {

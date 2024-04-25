@@ -63,8 +63,8 @@ const start = function(onStart) {
           res.end(serialization.serialize([e, v]));
         };
 
-        console.log(`[SERVER] Args: ${JSON.stringify(args)}
-            ServiceCallback: ${serviceCallback}`);
+        // console.log(`[SERVER] Args: ${JSON.stringify(args)}
+        //     ServiceCallback: ${serviceCallback}`);
 
         service[method](...args, serviceCallback);
       });

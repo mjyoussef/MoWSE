@@ -40,6 +40,7 @@ groups.put = (groupName, nodes, cb) => {
     mem: global.distribution.memTemplate(context),
     store: global.distribution.storeTemplate(context),
     mr: global.distribution.mrTemplate(context),
+    vecStore: global.distribution.vecStoreTemplate(context),
   };
 
   callback(null, nodes);

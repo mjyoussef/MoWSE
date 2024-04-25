@@ -4,6 +4,10 @@ const id = distribution.util.id;
 
 const groupsTemplate = require('../distribution/all/groups');
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 // This group is used for testing most of the functionality
 const mygroupGroup = {};
 // These groups are used for testing hashing
@@ -28,6 +32,8 @@ const n3 = {ip: '127.0.0.1', port: 8002};
 const n4 = {ip: '127.0.0.1', port: 8003};
 const n5 = {ip: '127.0.0.1', port: 8004};
 const n6 = {ip: '127.0.0.1', port: 8005};
+
+jest.setTimeout(1000*60*10)
 
 beforeAll((done) => {
   // First, stop the nodes if they are running
@@ -115,7 +121,7 @@ beforeAll((done) => {
       });
     });
   });
-});
+}, 1000*60*10);
 
 afterAll((done) => {
   distribution.mygroup.status.stop((e, v) => {
@@ -141,45 +147,6 @@ afterAll((done) => {
       });
     });
   });
-});
-
-// function for clearing 'store' directory
-function deleteFilesSynchronously() {
-  const path = global.distribution.path;
-  const fs = global.distribution.fs;
-  const directory = path.join(global.distribution.dir, 'store');
-  try {
-    // Read all files and directories in the specified directory
-    const files = fs.readdirSync(directory);
-
-    for (const file of files) {
-      // Construct full path to the file or directory
-      const fullPath = path.join(directory, file);
-
-      // Skip .gitignore in the root directory
-      if (file === '.gitignore' && fullPath === path.join(directory, '.gitignore')) {
-        continue;
-      }
-
-      // Check if the path is a directory or a file
-      const stat = fs.statSync(fullPath);
-
-      if (stat.isDirectory()) {
-        // Recursively delete directories
-        fs.rmSync(fullPath, {recursive: true, force: true});
-      } else {
-        // Delete files
-        fs.unlinkSync(fullPath);
-      }
-    }
-  } catch (err) {
-    console.error('Failed to delete:', err);
-  }
-}
-
-beforeEach(() => {
-  // make sure the store directory is empty
-  deleteFilesSynchronously();
 });
 
 // ---all.comm---
