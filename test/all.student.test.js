@@ -159,7 +159,8 @@ test('vecStore', (done) => {
               expect(e).toBeFalsy();
               distribution.mygroup.vecStore.put(d7.url, d7.vec, (e, v) => {
                 expect(e).toBeFalsy();
-                distribution.mygroup.vecStore.query(query, (e, v) => {
+                console.log('querying')
+                distribution.mygroup.vecStore.query(queryTerm, (e, v) => {
                   try {
                     expect(e).toBeFalsy();
                     expect(v.length).toEqual(count);

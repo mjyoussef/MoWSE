@@ -42,7 +42,7 @@ async function put(key, value, callback) {
   }
 }
 
-async function query(key, callback, k=5) {
+async function query(key, callback) {
   // comment out when fully distributed
   const local_db = await db.connect(`${ip}:${port}/vectordb`);
   global.distribution.vecStore = await local_db.openTable("vecStore");
