@@ -5,7 +5,7 @@ const port = global.nodeConfig.port;
 
 async function init(callback) {
   try {
-    const local_db = await db.connect(`${ip}:${port}/vectordb`);
+    const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
     // names = await local_db.tableNames();
     // if (!names.includes('vecStore')) {
     global.distribution.vecStore = await local_db.createTable("vecStore", [{
@@ -22,7 +22,7 @@ async function init(callback) {
 }
 
 async function put(key, value, callback) {
-  const local_db = await db.connect(`${ip}:${port}/vectordb`);
+  const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
   names = await local_db.tableNames();
   if (!names.includes('vecStore')) {
     global.distribution.vecStore = await local_db.createTable("vecStore", [{
@@ -44,7 +44,7 @@ async function put(key, value, callback) {
 
 async function query(key, callback) {
   // comment out when fully distributed
-  const local_db = await db.connect(`${ip}:${port}/vectordb`);
+  const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
   global.distribution.vecStore = await local_db.openTable("vecStore");
   const results = await global.distribution.vecStore.search(key.key).limit(key.k).execute();
   let topResults = results.map(result => ({
