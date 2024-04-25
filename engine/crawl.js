@@ -112,7 +112,8 @@ const crawlMap = (title, metadata) => {
     const embedding = embed(lowerCaseWords, (e, v) => {}, false);
 
     // store the embedding locally
-    // TODO
+    global.distribution.local.vecStore.put(embedding, {key: title}, (e, v) => {
+    });
 
     // get the links (titles)
     const links = page.links ? page.links.map(link => link.title) : [];

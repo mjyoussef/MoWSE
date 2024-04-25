@@ -1,11 +1,11 @@
 const index = {}
 
-function embed(doc, callback, tfidf=false) {
+function embed(inputs, callback, tfidf=false) {
   let model = global.distribution.embeddings;
   // console.log(doc);
-  let words = doc.toLowerCase().split(' ');
   let stopwords = global.distribution.stopwords;
-  words = words.filter((word) => !stopwords.includes(word)); // includes is linear time, can we speed this up using a set instead?
+  console.log(inputs);
+  words = inputs.filter((word) => !stopwords.includes(word)); // includes is linear time, can we speed this up using a set instead?
   if (tfidf) {
     global.distribution.documents += 1;
     let sum = null;

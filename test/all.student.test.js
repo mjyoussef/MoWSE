@@ -74,6 +74,7 @@ afterAll((done) => {
 test('all.comm.send(index.embed(text))', (done) => {
   const remote = {service: 'index', method: 'embed'};
   const text = 'The quick brown fox jumps over the lazy dog';
+  const words = text.toLowerCase().split(' ');
 
   function cosineSim(vector1, vector2) {
     let dotProduct = 0;
@@ -92,7 +93,7 @@ test('all.comm.send(index.embed(text))', (done) => {
     return dotProduct / (magnitude1 * magnitude2);
   };
 
-  distribution.mygroup.comm.send([text], remote, (e, v) => {
+  distribution.mygroup.comm.send([words], remote, (e, v) => {
     try {
       expect(e).toEqual({});
       results = [];
@@ -115,34 +116,34 @@ test('vecStore', (done) => {
   length = 50;
   d1 = {
     url: 'https://en.wikipedia.org/wiki/Rome', 
-    vec: embed('This is about Rome'),
+    vec: embed('This is about Rome'.toLowerCase().split(' ')),
   };
   d2 = {
     url:'https://en.wikipedia.org/wiki/Ancient_Rome',
-    vec: embed('This is about Ancient Rome'),
+    vec: embed('This is about Ancient Rome'.toLowerCase().split(' ')),
   };
   d3 = {
     url: 'https://en.wikipedia.org/wiki/Greece',
-    vec: embed('This is about Greece'),
+    vec: embed('This is about Greece'.toLowerCase().split(' ')),
   };
   d4 = {
     url: 'https://en.wikipedia.org/wiki/Kingdom_of_Greece',
-    vec: embed('This is about the Kingdom of Greece'),
+    vec: embed('This is about the Kingdom of Greece'.toLowerCase().split(' ')),
   };
   d5 = {
     url: 'https://en.wikipedia.org/wiki/Pizza',
-    vec: embed('This is about Pizza'),
+    vec: embed('This is about Pizza'.toLowerCase().split(' ')),
   };
   d6 = {
     url: 'https://en.wikipedia.org/wiki/Brown_University',
-    vec: embed('This is about Brown University'),
+    vec: embed('This is about Brown University'.toLowerCase().split(' ')),
   };
   d7 = {
     url: 'https://en.wikipedia.org/wiki/Computer_science',
-    vec: embed('This is about Computer Science'),
+    vec: embed('This is about Computer Science'.toLowerCase().split(' ')),
   };
 
-  queryTerm = 'school';
+  queryTerm = ['school'];
   count = 3;
 
   distribution.mygroup.vecStore.put(d1.url, d1.vec, (e, v) => {

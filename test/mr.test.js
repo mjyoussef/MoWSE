@@ -57,7 +57,7 @@ beforeAll((done) => {
       });
     });
   });
-});
+}, 1000*60*2);
 
 afterAll((done) => {
   let remote = {service: 'status', method: 'stop'};
@@ -111,6 +111,10 @@ function deleteFilesSynchronously() {
 beforeEach(() => {
   // make sure the store directory is empty
   deleteFilesSynchronously();
+});
+
+afterEach(() => {
+  jest.useRealTimers();
 });
 
 // ---all.mr---
