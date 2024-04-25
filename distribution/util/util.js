@@ -27,7 +27,7 @@ function loadGloVeEmbeddings(folderPath, callback) {
     global.distribution.embeddings = embeddings;
     global.distribution.tfidf = tfidf;
     global.distribution.documents = 0;
-    stopwords = './distribution/util/stop.txt'
+    stopwords = './distribution/util/stop.txt';
     global.distribution.stopwords = fs.readFileSync(stopwords, 'utf8');
     callback(null, 'Successfully loaded GloVe embeddings');
   } catch (err) {

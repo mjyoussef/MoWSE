@@ -54,7 +54,6 @@ const vecStore = (config) => {
 
         const promises = [];
         for (const nid in nodes) {
-
           const remote = {
             node: nodes[nid],
             service: 'vecStore',
@@ -62,7 +61,7 @@ const vecStore = (config) => {
           };
 
           promises.push(new Promise((resolve, reject) => {
-            local.comm.send([{key: embedded_query, k: k }], remote, (e, v) => {
+            local.comm.send([{key: embedded_query, k: k}], remote, (e, v) => {
               if (e) {
                 resolve([]);
               } else {
@@ -78,7 +77,7 @@ const vecStore = (config) => {
           });
           results = results.reverse();
           results = results.slice(0, k);
-          results = results.map(result => result.url);
+          results = results.map((result) => result.url);
           if (cb) {
             cb(undefined, results);
           }

@@ -33,7 +33,7 @@ const n4 = {ip: '127.0.0.1', port: 8003};
 const n5 = {ip: '127.0.0.1', port: 8004};
 const n6 = {ip: '127.0.0.1', port: 8005};
 
-jest.setTimeout(1000*60*10)
+jest.setTimeout(1000*60*10);
 
 beforeAll((done) => {
   // First, stop the nodes if they are running

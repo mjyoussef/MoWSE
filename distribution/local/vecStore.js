@@ -8,10 +8,10 @@ async function init(callback) {
     const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
     // names = await local_db.tableNames();
     // if (!names.includes('vecStore')) {
-    global.distribution.vecStore = await local_db.createTable("vecStore", [{
+    global.distribution.vecStore = await local_db.createTable('vecStore', [{
       vector: Array.from({length: 50}, () => 0.0),
-      url: "",
-    }], { writeMode: db.WriteMode.Overwrite });
+      url: '',
+    }], {writeMode: db.WriteMode.Overwrite});
     // } else {
     //   global.distribution.vecStore = await local_db.openTable("vecStore");
     // }
@@ -25,14 +25,14 @@ async function put(key, value, callback) {
   const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
   names = await local_db.tableNames();
   if (!names.includes('vecStore')) {
-    global.distribution.vecStore = await local_db.createTable("vecStore", [{
+    global.distribution.vecStore = await local_db.createTable('vecStore', [{
       vector: key,
       url: value.key,
-    }], { writeMode: db.WriteMode.Overwrite });
+    }], {writeMode: db.WriteMode.Overwrite});
     callback(null, 'added');
   } else {
     // comment out when fully distributed
-    global.distribution.vecStore = await local_db.openTable("vecStore");
+    global.distribution.vecStore = await local_db.openTable('vecStore');
     await global.distribution.vecStore.add([{
       vector: key,
       url: value.key,
@@ -45,11 +45,11 @@ async function put(key, value, callback) {
 async function query(key, callback) {
   // comment out when fully distributed
   const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
-  global.distribution.vecStore = await local_db.openTable("vecStore");
+  global.distribution.vecStore = await local_db.openTable('vecStore');
   const results = await global.distribution.vecStore.search(key.key).limit(key.k).execute();
-  let topResults = results.map(result => ({
+  let topResults = results.map((result) => ({
     url: result.url,
-    cosineSim: cosineSim(key.key, result.vector)
+    cosineSim: cosineSim(key.key, result.vector),
   })).sort((a, b) => a.cosineSim - b.cosineSim);
   topResults = topResults.reverse();
   const top = topResults.slice(0, key.k);

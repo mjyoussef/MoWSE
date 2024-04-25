@@ -1,125 +1,68 @@
-/* Generates an embedding for a document given its list of (lowercased)
-words. You can weight the Mean of Words (MoW) embedding using tfidf scores. */
-const embed = (words, callback, tfidf=false) => {
-  let model = global.distribution.embeddings;
-  let stopwords = global.distribution.stopwords;
-  words = words.filter((word) => !stopwords.includes(word));
-  if (tfidf) {
-    global.distribution.documents += 1;
-    let sum = null;
-    let total = 0;
-    vectors = {};
-    for (let word of words) {
-      if (word in model) {
-        if (word in vectors) {
-          vectors[word] = {vec: model[word], count: vectors[word].count + 1};
-        } else {
-          vectors[word] = {vec: model[word], count: 1};
-        }
-        total += 1;
-      }
-    }
-    for (const [word, info] of Object.entries(vectors)) {
-      global.distribution.tfidf[word] += 1;
-      tf = info.count / total;
-      idf = Math.log(global.distribution.documents / global.distribution.tfidf[word]);
-      weight = tf * idf;
-      if (sum === null) {
-        sum = info.vec.map((x) => x * weight);
-      } else {
-        for (let i = 0; i < sum.length; i++) {
-          sum[i] += info.vec[i] * weight;
-          sum[i] = sum[i];
-        }
-      }
-    }
-    if (sum !== null) {
-      sum = Array.from({length: 50}, () => 0.0);
-    }
-    if (callback) {
-      callback(null, sum);
-    }
-    return sum;
-  } else {
-    let sum = null;
-    for (let word of words) {
-      if (word in model) {
-        if (sum === null) {
-          sum = model[word];
-        } else {
-          for (let i = 0; i < sum.length; i++) {
-            sum[i] += model[word][i];
-          }
-        }
-      }
-    }
-    if (sum !== null) {
-      const length = words.length;
-      for (let i = 0; i < sum.length; i++) {
-        sum[i] /= length;
-        sum[i] = sum[i];
-      }
-    } else {
-      sum = Array.from({length: 50}, () => 0.0);
-    }
-    if (callback) {
-      callback(null, sum);
-    }
-    return sum;
-  }
-};
-
 /* Input key = title of page, input value = some metadata.
-`crawlMap` embeds the document, saves the embedding locally, and 
+`crawlMap` embeds the document, saves the embedding locally, and
 returns a subset of the outgoing URLs for the next MR iteration. */
 const crawlMap = (title, metadata) => {
   const accessToken = metadata.accessToken;
+  const gid = metadata.gid;
 
   // if the url has been visited, return nothing
+  return new Promise((resolve, reject) => {
+    global.distribution.local.mem.get('visited', [], (e, visited) => {
+      // skip
+      if (visited.has(title)) {
+        resolve(undefined);
+      }
 
-  // otherwise, mark it as visited
+      // otherwise, mark it as visited
+      visited.add(title);
+      global.distribution.local.mem.put(visited, 'visited', [], (e, v) => {
+        const apiUrl = `https://en.wikipedia.org/w/api.php`;
+        const params = {
+          action: 'query',
+          format: 'json',
+          prop: 'extracts|links',
+          titles: title,
+          explaintext: true,
+          pllimit: 'max',
+          redirects: 1, // Resolve redirects
+        };
 
-  const apiUrl = `https://en.wikipedia.org/w/api.php`;
-  const params = {
-    action: 'query',
-    format: 'json',
-    prop: 'extracts|links',
-    titles: title,
-    explaintext: true,
-    pllimit: 'max',
-    redirects: 1, // Resolve redirects
-  };
+        const queryString = new URLSearchParams(params).toString();
+        const sourceURL = `${apiUrl}?${queryString}`;
 
-  const queryString = new URLSearchParams(params).toString();
-  const sourceURL = `${apiUrl}?${queryString}`;
+        axios.get(sourceURL, {
+          headers: {
+            Authorization: `${accessToken}`,
+          },
+        }).then((response) => {
+          const page = Object.values(response.data.query.pages)[0];
 
-  // make the request
-  return axios.get(sourceURL, {
-    headers: {
-      Authorization: `${accessToken}`,
-    },
-  }).then((response) => {
-    const page = Object.values(response.data.query.pages)[0];
+          // raw text
+          const text = page.extract;
 
-    // raw text
-    const text = page.extract;
+          // get the lowercased words
+          const words = text.match(/\b[\w']+\b/g);
+          const lowerCaseWords = words.map((word) => word.toLowerCase());
 
-    // get the lowercased words
-    const words = text.match(/\b[\w']+\b/g);
-    const lowerCaseWords = words.map((word) => word.toLowerCase());
+          // embed the document
+          const embed = global.distribution.local.index.embed;
+          const embedding = embed(lowerCaseWords, (e, v) => {}, false);
 
-    // embed the document
-    const embedding = embed(lowerCaseWords, (e, v) => {}, false);
-
-    // store the embedding locally
-    global.distribution.local.vecStore.put(embedding, {key: title}, (e, v) => {
+          // store the embedding locally
+          global.distribution.local.vecStore.put(embedding, {key: title, gid: gid}, (e, v) => {
+            if (e) {
+              reject(e);
+              return;
+            }
+            // get the links (titles)
+            const links = page.links ? page.links.map((link) => link.title) : [];
+            resolve({title: links});
+          });
+        }).catch((error) => {
+          reject(error);
+        });
+      });
     });
-
-    // get the links (titles)
-    const links = page.links ? page.links.map(link => link.title) : [];
-
-    // return a fraction of the links
-    return {title: links};
   });
 };
 
@@ -130,7 +73,7 @@ const crawlReduce = (title, values) => {
   return new Promise((resolve, reject) => {
     resolve({title: values.flat()});
   });
-}
+};
 
 /* Crawler */
 const crawl = async (alpha, beta, gid, titlesPath, authTokensPath) => {
@@ -163,22 +106,23 @@ const crawl = async (alpha, beta, gid, titlesPath, authTokensPath) => {
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
         if (e) {
-          return new Error('Failed to get nodes in group');
+          reject(e);
+          return;
         }
-  
+
         // assign titles to nodes
         const nidsToTitles = {};
         for (let title of titles) {
           const kid = global.distribution.util.id.getID(title);
           const nid = global.distribution.util.id[hash](kid, Object.keys(nodes));
-  
+
           const nidTitles = nidsToTitles[nid] || [];
           nidTitles.push(title);
           nidsToTitles[nid] = nidTitles;
         }
 
         const inputs = [];
-  
+
         /* populate inputs (for the current MapReduce iteration) */
         for (const [nid, nidTitles] in Object.entries(nidsToTitles)) {
           for (let nidTitle of nidTitles) {
@@ -196,7 +140,10 @@ const crawl = async (alpha, beta, gid, titlesPath, authTokensPath) => {
               const tokenLimit = tokenLimits[token];
               inputs.push({
                 key: nidTitle,
-                value: token,
+                value: {
+                  accessToken: token,
+                  gid: gid,
+                },
               });
 
               // update the tokenLimits dictionary
@@ -220,7 +167,7 @@ const crawl = async (alpha, beta, gid, titlesPath, authTokensPath) => {
           mapFn: crawlMap,
           reduceFn: crawlReduce,
           inputs: inputs,
-        }
+        };
 
         global.distribution[gid].mr.exec(args, (e, results) => {
           if (e) {
@@ -234,7 +181,7 @@ const crawl = async (alpha, beta, gid, titlesPath, authTokensPath) => {
           // aggregate the extracted pages and resolve
           results.forEach((result) => {
             titles.add(...result[Object.keys(result)[0]]);
-          }); 
+          });
 
           resolve(titles);
         });
@@ -249,8 +196,9 @@ const crawl = async (alpha, beta, gid, titlesPath, authTokensPath) => {
         return;
       }
     } catch (error) {
-      console.error("Error:", error.message);
+      console.error('Error:', error.message);
       return;
     }
   }
 };
+

@@ -1,5 +1,5 @@
 global.nodeConfig = {ip: '127.0.0.1', port: 8080};
-const { expect } = require('@jest/globals');
+const {expect} = require('@jest/globals');
 const distribution = require('../distribution.js');
 const id = distribution.util.id;
 const groupsTemplate = require('../distribution/all/groups');
@@ -64,7 +64,7 @@ afterAll((done) => {
       distribution.local.comm.send([], remote, (e, v) => {
         remote.node = n3;
         distribution.local.comm.send([], remote, (e, v) => {
-          done()
+          done();
         });
       });
     });
@@ -80,16 +80,16 @@ test('all.comm.send(index.embed(text))', (done) => {
     let dotProduct = 0;
     let magnitude1 = 0;
     let magnitude2 = 0;
-  
+
     for (let i = 0; i < vector1.length; i++) {
       dotProduct += vector1[i] * vector2[i];
       magnitude1 += Math.pow(vector1[i], 2);
       magnitude2 += Math.pow(vector2[i], 2);
     }
-  
+
     magnitude1 = Math.sqrt(magnitude1);
     magnitude2 = Math.sqrt(magnitude2);
-  
+
     return dotProduct / (magnitude1 * magnitude2);
   };
 
@@ -115,11 +115,11 @@ test('vecStore', (done) => {
   embed = distribution.local.index.embed;
   length = 50;
   d1 = {
-    url: 'https://en.wikipedia.org/wiki/Rome', 
+    url: 'https://en.wikipedia.org/wiki/Rome',
     vec: embed('This is about Rome'.toLowerCase().split(' ')),
   };
   d2 = {
-    url:'https://en.wikipedia.org/wiki/Ancient_Rome',
+    url: 'https://en.wikipedia.org/wiki/Ancient_Rome',
     vec: embed('This is about Ancient Rome'.toLowerCase().split(' ')),
   };
   d3 = {
@@ -160,12 +160,12 @@ test('vecStore', (done) => {
               expect(e).toBeFalsy();
               distribution.mygroup.vecStore.put(d7.url, d7.vec, (e, v) => {
                 expect(e).toBeFalsy();
-                console.log('querying')
+                console.log('querying');
                 distribution.mygroup.vecStore.query(queryTerm, (e, v) => {
                   try {
                     expect(e).toBeFalsy();
                     expect(v.length).toEqual(count);
-                    let msg = `Top ${count} results for '${queryTerm}':`
+                    let msg = `Top ${count} results for '${queryTerm}':`;
                     for (let i = 0; i < count; i++) {
                       msg += `\n  ${v[i]}`;
                     }
