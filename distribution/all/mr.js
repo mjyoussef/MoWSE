@@ -39,7 +39,7 @@ const mr = function (config) {
                 key,
                 (e, v) => {
                   if (e) {
-                    // console.log("Break1", e);
+                    console.log("Error here", e);
                     reject(e, v);
                   } else {
                     resolve(v);

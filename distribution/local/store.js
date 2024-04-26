@@ -150,6 +150,7 @@ store.put = (value, key, root, cb) => {
     fs.appendFileSync(filePath, `${global.distribution.util.serialize(value)}\n`);
     cb(undefined, value);
   } catch (error) {
+    console.log(error);
     cb(new Error(`Local.store.put: failed to write to file`), undefined);
   }
 };

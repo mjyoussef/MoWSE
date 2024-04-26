@@ -20,7 +20,6 @@ const crawlMap = (title, metadata) => {
         return;
       }
 
-      console.log(visited, title);
       // otherwise, mark it as visited
       visited.add(title);
       global.distribution.local.mem.put(visited, "visited", [], (e, v) => {
@@ -67,7 +66,9 @@ const crawlMap = (title, metadata) => {
             const links = page.links
               ? page.links.map((link) => link.title)
               : [];
-            resolve({ title: links });
+            let obj = {};
+            obj[title] = links;
+            resolve(obj);
 
             // store the embedding locally
             // global.distribution.local.vecStore.put(
@@ -213,7 +214,7 @@ const crawl = async (
         }
 
         const args = {
-          mrid: `crawl-mr-${it}`,
+          mrid: `crawl-mr`,
           mapFn: crawlMap,
           reduceFn: crawlReduce,
           inputs: inputs,
@@ -227,8 +228,11 @@ const crawl = async (
 
           // aggregate the extracted pages and resolve
           results.forEach((result) => {
-            titles.add(...result[Object.keys(result)[0]]);
+            const elts = result[Object.keys(result)[0]];
+            elts.forEach(e => titles.add(e));
           });
+
+          console.log(titles);
 
           resolve(titles);
         });
@@ -239,7 +243,7 @@ const crawl = async (
       const titles = await mrIterationPromise;
       // console.log(titles);
       count += titles.size;
-      console.log("Here is titles", titles);
+      // console.log("Here is titles", titles);
 
       // either because access tokens have been completely used
       // or all the pages have been crawled.
