@@ -71,7 +71,7 @@ function askQuestion() {
     const vecStore = distribution.crawl.vecStore;
     if (query.toLowerCase() == 'halt') {
       rl.close();
-      return;
+      localServer.close()
     } else {
       vecStore.query(query.toLowerCase(), (e, v) => {
         if (e) {
@@ -90,26 +90,27 @@ distribution.node.start((server) => {
 
   const crawlConfig = { gid: "crawl" };
   groupsTemplate(crawlConfig).put("crawl", crawlGroup, (e, v) => {
-    distribution.crawl.vecStore.put(d1.url, d1.vec, (e, v) => {
-      distribution.crawl.vecStore.put(d2.url, d2.vec, (e, v) => {
-        distribution.crawl.vecStore.put(d3.url, d3.vec, (e, v) => {
-          distribution.crawl.vecStore.put(d4.url, d4.vec, (e, v) => {
-            distribution.crawl.vecStore.put(d5.url, d5.vec, (e, v) => {
-              distribution.crawl.vecStore.put(d6.url, d6.vec, (e, v) => {
-                distribution.crawl.vecStore.put(d7.url, d7.vec, (e, v) => {
-                  distribution.crawl.vecStore.put(d8.url, d8.vec, (e, v) => {
-                    distribution.crawl.vecStore.put(d9.url, d9.vec, (e, v) => {
-                      distribution.crawl.vecStore.put(d10.url, d10.vec, (e, v) => {
-                        askQuestion();
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+    askQuestion();
+    // distribution.crawl.vecStore.put(d1.url, d1.vec, (e, v) => {
+    //   distribution.crawl.vecStore.put(d2.url, d2.vec, (e, v) => {
+    //     distribution.crawl.vecStore.put(d3.url, d3.vec, (e, v) => {
+    //       distribution.crawl.vecStore.put(d4.url, d4.vec, (e, v) => {
+    //         distribution.crawl.vecStore.put(d5.url, d5.vec, (e, v) => {
+    //           distribution.crawl.vecStore.put(d6.url, d6.vec, (e, v) => {
+    //             distribution.crawl.vecStore.put(d7.url, d7.vec, (e, v) => {
+    //               distribution.crawl.vecStore.put(d8.url, d8.vec, (e, v) => {
+    //                 distribution.crawl.vecStore.put(d9.url, d9.vec, (e, v) => {
+    //                   distribution.crawl.vecStore.put(d10.url, d10.vec, (e, v) => {
+    //                     askQuestion();
+    //                   });
+    //                 });
+    //               });
+    //             });
+    //           });
+    //         });
+    //       });
+    //     });
+    //   });
+    // });
   });
 });

@@ -6,15 +6,17 @@ const port = global.nodeConfig.port;
 async function init(callback) {
   try {
     const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
-    // names = await local_db.tableNames();
-    // if (!names.includes('vecStore')) {
-    global.distribution.vecStore = await local_db.createTable("vecStore", [{
-      vector: Array.from({length: 50}, () => 0.0),
-      url: "",
-    }], { writeMode: db.WriteMode.Overwrite });
-    // } else {
-    //   global.distribution.vecStore = await local_db.openTable("vecStore");
-    // }
+    names = await local_db.tableNames();
+    if (!names.includes('vecStore')) {
+      console.log(`Start new vecStore at ${ip}:${port}`);
+      global.distribution.vecStore = await local_db.createTable("vecStore", [{
+        vector: Array.from({length: 50}, () => 0.0),
+        url: "",
+      }], { writeMode: db.WriteMode.Overwrite });
+    } else {
+      console.log(`Open old vecStore at ${ip}:${port}`);
+      global.distribution.vecStore = await local_db.openTable("vecStore");
+    }
     callback(null, 'vectorDB initialized successfully');
   } catch (error) {
     callback(error, null);
@@ -22,7 +24,6 @@ async function init(callback) {
 }
 
 async function put(key, value, callback) {
-  console.log(JSON.stringify(value));
   const local_db = await db.connect(`vecStore_data/${ip}:${port}/vectordb`);
   names = await local_db.tableNames();
   if (!names.includes('vecStore')) {
