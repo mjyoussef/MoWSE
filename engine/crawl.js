@@ -20,6 +20,11 @@ const crawlMap = (title, metadata) => {
         return;
       }
 
+      if (/[^\w\s]/.test(title)) {
+        resolve(undefined);
+        return;
+      }
+
       // otherwise, mark it as visited
       visited.add(title);
       global.distribution.local.mem.put(visited, "visited", [], (e, v) => {
@@ -66,8 +71,13 @@ const crawlMap = (title, metadata) => {
             const links = page.links
               ? page.links.map((link) => link.title)
               : [];
+
+            const filteredLinks = links.filter(
+              (title) => !/[^\w\s]/.test(title)
+            );
+
             let obj = {};
-            obj[title] = links;
+            obj[title] = filteredLinks;
             resolve(obj);
 
             // store the embedding locally
@@ -118,6 +128,8 @@ const crawl = async (
   authTokensPath,
   cb
 ) => {
+  console.time("crawl_execution_time");
+
   // get the authentication tokens
   const rawJSON = fs.readFileSync(authTokensPath, { encoding: "utf-8" });
   const tokens = JSON.parse(rawJSON);
@@ -145,8 +157,9 @@ const crawl = async (
   let count = 0;
   let it = 0;
   // while (count < 1000) {
-  while (count < 1000) {
+  while (it < 3) {
     // MapReduce
+    console.log(it);
     it += 1;
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
@@ -229,7 +242,7 @@ const crawl = async (
           // aggregate the extracted pages and resolve
           results.forEach((result) => {
             const elts = result[Object.keys(result)[0]];
-            elts.forEach(e => titles.add(e));
+            elts.forEach((e) => titles.add(e));
           });
 
           console.log(titles);
@@ -257,6 +270,9 @@ const crawl = async (
       return;
     }
   }
+
+  console.timeEnd("crawl_execution_time");
+  cb(undefined, true);
 };
 
 global.nodeConfig = { ip: "127.0.0.1", port: 7070 };
@@ -287,11 +303,9 @@ distribution.node.start((server) => {
       "./engine/titles.txt",
       "./engine/config.json",
       (e, v) => {
-        distribution.crawl.mem.get("visited", (e, v) => {
-          // console.log("FINISHED CRAWLING", e, v);
-          localServer.close();
-          return;
-        });
+        console.log("FINISHED CRAWLING", e, v);
+        localServer.close();
+        return;
       }
     );
   });
