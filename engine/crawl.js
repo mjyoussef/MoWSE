@@ -162,7 +162,7 @@ const crawl = async (
   let uniqueTitles = new Set();
   let it = 0;
   // while (count < 1000) {
-  while (it < 5) {
+  while (it < 10) {
     // MapReduce
     // console.log(it);
     it += 1;
@@ -227,7 +227,7 @@ const crawl = async (
         }
 
         inputs = inputs.sort(() => Math.random() - 0.5);
-        inputs.slice(0, 8000);
+        inputs.slice(0, 5000);
 
         // if all of the access tokens have been completely used up
         if (inputs.length === 0) {
@@ -309,9 +309,9 @@ const n9 = { ip: "127.0.0.1", port: 7118 };
 const n10 = { ip: "127.0.0.1", port: 7119 };
 
 crawlGroup[id.getSID(n1)] = n1;
-crawlGroup[id.getSID(n2)] = n2;
-crawlGroup[id.getSID(n3)] = n3;
-crawlGroup[id.getSID(n4)] = n4;
+// crawlGroup[id.getSID(n2)] = n2;
+// crawlGroup[id.getSID(n3)] = n3;
+// crawlGroup[id.getSID(n4)] = n4;
 // crawlGroup[id.getSID(n5)] = n5;
 // crawlGroup[id.getSID(n6)] = n6;
 // crawlGroup[id.getSID(n7)] = n7;
@@ -325,8 +325,8 @@ distribution.node.start((server) => {
   groupsTemplate(crawlConfig).put("crawl", crawlGroup, (e, v) => {
     crawl(
       "naiveHash",
-      0.005,
-      80,
+      0.008,
+      150,
       "crawl",
       "./engine/titles.txt",
       "./engine/config.json",
