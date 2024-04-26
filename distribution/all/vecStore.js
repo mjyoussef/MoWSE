@@ -61,7 +61,7 @@ const vecStore = (config) => {
           };
 
           promises.push(new Promise((resolve, reject) => {
-            local.comm.send([{key: embedded_query, k: k}], remote, (e, v) => {
+            local.comm.send([{key: key, k: k}], remote, (e, v) => {
               if (e) {
                 resolve([]);
               } else {

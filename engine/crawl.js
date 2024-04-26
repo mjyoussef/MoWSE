@@ -78,31 +78,32 @@ const crawlMap = (title, metadata) => {
             // let obj = {};
             // obj[title] = filteredLinks;
             // resolve(obj);
+            setTimeout(function(){
+              global.distribution.local.vecStore.put(
+                embedding,
+                { key: title, gid: gid },
+                (e, v) => {
+                  if (e) {x
+                    reject(e);
 
-            global.distribution.local.vecStore.put(
-              embedding,
-              { key: title, gid: gid },
-              (e, v) => {
-                if (e) {x
-                  reject(e);
+                    return;
+                  }
+                  // get the links (titles)
+                  const links = page.links
+                    ? page.links.map((link) => link.title)
+                    : [];
 
-                  return;
+                  const filteredLinks = links.filter(
+                    (title) => !/[^\w\s]/.test(title)
+                  );
+
+                  let obj = {};
+                  obj[title] = filteredLinks;
+                  console.log("Completed requested: ", title);
+                  resolve(obj);
                 }
-                // get the links (titles)
-                const links = page.links
-                  ? page.links.map((link) => link.title)
-                  : [];
-
-                const filteredLinks = links.filter(
-                  (title) => !/[^\w\s]/.test(title)
-                );
-
-                let obj = {};
-                obj[title] = filteredLinks;
-                console.log("Completed requested: ", title);
-                resolve(obj);
-              }
-            );
+              );
+            }, 100);
           })
           .catch((error) => {
             reject(error);
@@ -162,7 +163,7 @@ const crawl = async (
   let uniqueTitles = new Set();
   let it = 0;
   // while (count < 1000) {
-  while (it < 10) {
+  while (it < 7) {
     // MapReduce
     // console.log(it);
     it += 1;
@@ -207,7 +208,7 @@ const crawl = async (
 
               // otherwise, assign the key-value pair a random access token
               // const token = tokens[Math.floor(Math.random() * tokens.length)];
-              const token = tokens[0];
+              const token = tokens[6];
               const tokenLimit = tokenLimits[token];
               let obj = {};
               obj[nidTitle] = {
@@ -227,7 +228,7 @@ const crawl = async (
         }
 
         inputs = inputs.sort(() => Math.random() - 0.5);
-        inputs.slice(0, 5000);
+        inputs.slice(0, 2000);
 
         // if all of the access tokens have been completely used up
         if (inputs.length === 0) {
@@ -309,8 +310,8 @@ const n9 = { ip: "127.0.0.1", port: 7118 };
 const n10 = { ip: "127.0.0.1", port: 7119 };
 
 crawlGroup[id.getSID(n1)] = n1;
-// crawlGroup[id.getSID(n2)] = n2;
-// crawlGroup[id.getSID(n3)] = n3;
+crawlGroup[id.getSID(n2)] = n2;
+crawlGroup[id.getSID(n3)] = n3;
 // crawlGroup[id.getSID(n4)] = n4;
 // crawlGroup[id.getSID(n5)] = n5;
 // crawlGroup[id.getSID(n6)] = n6;
@@ -325,8 +326,8 @@ distribution.node.start((server) => {
   groupsTemplate(crawlConfig).put("crawl", crawlGroup, (e, v) => {
     crawl(
       "naiveHash",
-      0.008,
-      150,
+      0.01,
+      100,
       "crawl",
       "./engine/titles.txt",
       "./engine/config.json",
