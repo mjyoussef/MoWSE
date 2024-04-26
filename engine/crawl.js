@@ -160,7 +160,6 @@ const crawl = async (
   }
 
   let uniqueTitles = new Set();
-  let count = 0;
   let it = 0;
   // while (count < 1000) {
   while (it < 8) {
@@ -189,7 +188,7 @@ const crawl = async (
           nidsToTitles[nid] = nidTitles;
         }
 
-        const inputs = [];
+        let inputs = [];
 
         /* populate inputs (for the current MapReduce iteration) */
         for (let [nid, nidTitles] of Object.entries(nidsToTitles)) {
@@ -228,7 +227,6 @@ const crawl = async (
         }
 
         inputs = inputs.sort(() => Math.random() - 0.5);
-        // inputs = inputs.slice(0, 2000);
         inputs.slice(0, 2000);
 
         // if all of the access tokens have been completely used up
