@@ -17,8 +17,10 @@ const crawlMap = (title, metadata) => {
 
       if (visited.has(title)) {
         resolve(undefined);
+        return;
       }
 
+      console.log(visited, title);
       // otherwise, mark it as visited
       visited.add(title);
       global.distribution.local.mem.put(visited, "visited", [], (e, v) => {
@@ -60,7 +62,7 @@ const crawlMap = (title, metadata) => {
             // embed the document
             const embed = global.distribution.local.index.embed;
             const embedding = embed(lowerCaseWords, (e, v) => {}, false);
-            // console.log("Completed requested: ", title);
+            console.log("Completed requested: ", title);
 
             const links = page.links
               ? page.links.map((link) => link.title)
@@ -99,7 +101,9 @@ values is a list of lists of outgoing URLs (titles). `crawlReduce` simply flatte
 this list. */
 const crawlReduce = (title, values) => {
   return new Promise((resolve, reject) => {
-    resolve({ title: values.flat() });
+    let obj = {};
+    obj[title] = values.flat();
+    resolve(obj);
   });
 };
 
@@ -138,9 +142,11 @@ const crawl = async (
   }
 
   let count = 0;
+  let it = 0;
   // while (count < 1000) {
-  while (count < 1) {
+  while (count < 1000) {
     // MapReduce
+    it += 1;
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
         if (e) {
@@ -207,7 +213,7 @@ const crawl = async (
         }
 
         const args = {
-          mrid: "crawl-mr",
+          mrid: `crawl-mr-${it}`,
           mapFn: crawlMap,
           reduceFn: crawlReduce,
           inputs: inputs,
@@ -218,9 +224,6 @@ const crawl = async (
             reject(e);
             return;
           }
-
-          // each key in v is a page that was succesfully crawled
-          count += results.length;
 
           // aggregate the extracted pages and resolve
           results.forEach((result) => {
@@ -236,7 +239,7 @@ const crawl = async (
       const titles = await mrIterationPromise;
       // console.log(titles);
       count += titles.size;
-      console.log("Here is titles.size: ", count);
+      console.log("Here is titles", titles);
 
       // either because access tokens have been completely used
       // or all the pages have been crawled.
@@ -245,7 +248,7 @@ const crawl = async (
         return;
       }
     } catch (error) {
-      // console.error("Error:", error.message);
+      console.error("Error:", error.message);
       cb(new Error(error.message), undefined);
       return;
     }

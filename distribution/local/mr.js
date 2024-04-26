@@ -21,7 +21,8 @@ mr.map = (args, cb) => {
     [args.mrid, "map"],
     async (e, keyValPairs) => {
       if (e) {
-        cb(new Error("Error getting map input key-value pairs"), undefined);
+        cb(undefined, true);
+        return;
       }
 
       // run map computation on each key-value pair

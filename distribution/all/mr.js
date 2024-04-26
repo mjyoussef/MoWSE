@@ -136,7 +136,7 @@ const mr = function (config) {
               });
           })
           .catch((mapError) => {
-            // console.log(mapError);
+            console.log(mapError);
             cb(new Error("Error: failed map phase"), undefined);
           });
       });
