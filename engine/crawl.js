@@ -60,24 +60,31 @@ const crawlMap = (title, metadata) => {
             // embed the document
             const embed = global.distribution.local.index.embed;
             const embedding = embed(lowerCaseWords, (e, v) => {}, false);
+            // console.log("Completed requested: ", title);
+
+            const links = page.links
+              ? page.links.map((link) => link.title)
+              : [];
+            resolve({ title: links });
 
             // store the embedding locally
-            global.distribution.local.vecStore.put(
-              embedding,
-              { key: title, gid: gid },
-              (e, v) => {
-                if (e) {
-                  reject(e);
-                  return;
-                }
-                // get the links (titles)
-                const links = page.links
-                  ? page.links.map((link) => link.title)
-                  : [];
-                console.log("Here is a title", title);
-                resolve({ title: links });
-              }
-            );
+            // global.distribution.local.vecStore.put(
+            //   embedding,
+            //   { key: title, gid: gid },
+            //   (e, v) => {
+            //     if (e) {
+            //       reject(e);
+
+            //       return;
+            //     }
+            //     // get the links (titles)
+            //     const links = page.links
+            //       ? page.links.map((link) => link.title)
+            //       : [];
+            //     console.log("Here is a title", title);
+            //     resolve({ title: links });
+            //   }
+            // );
           })
           .catch((error) => {
             reject(error);
@@ -131,10 +138,8 @@ const crawl = async (
   }
 
   let count = 0;
-  let its = 0;
   // while (count < 1000) {
-  while (its < 2) {
-    its++;
+  while (count < 1) {
     // MapReduce
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
@@ -229,14 +234,18 @@ const crawl = async (
 
     try {
       const titles = await mrIterationPromise;
+      // console.log(titles);
+      count += titles.size;
+      console.log("Here is titles.size: ", count);
+
       // either because access tokens have been completely used
       // or all the pages have been crawled.
-      if (titles.length === 0) {
+      if (titles.size === 0) {
         cb(undefined, true);
         return;
       }
     } catch (error) {
-      console.error("Error:", error.message);
+      // console.error("Error:", error.message);
       cb(new Error(error.message), undefined);
       return;
     }
@@ -272,7 +281,7 @@ distribution.node.start((server) => {
       "./engine/config.json",
       (e, v) => {
         distribution.crawl.mem.get("visited", (e, v) => {
-          console.log("FINISHED CRAWLING", e, v);
+          // console.log("FINISHED CRAWLING", e, v);
           localServer.close();
           return;
         });

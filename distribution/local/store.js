@@ -17,7 +17,7 @@ function readFilesFromDirectory(dirPath, cb, includeValues=false) {
     const files = entries.filter((entry) => entry.isFile()).map((file) => file.name);
 
     if (error) {
-      console.log('b1', error);
+      // console.log('b1', error);
       cb(new Error(`Local.store: failed to read directory`), undefined);
       return;
     }
@@ -37,7 +37,7 @@ function readFilesFromDirectory(dirPath, cb, includeValues=false) {
         const filePath = path.join(dirPath, files[i]);
         fs.readFile(filePath, 'utf-8', (error, data) => {
           if (error) {
-            console.log('b6', error);
+            // console.log('b6', error);
             reject(error);
             return;
           }
@@ -198,7 +198,7 @@ store.del = (key, root, cb) => {
     // unlink the file
     fs.unlink(filePath, (error) => {
       if (error) {
-        console.log('b5', error);
+        // console.log('b5', error);
         cb(new Error(`Local.store.del: failed to unlink`), undefined);
         return;
       }
