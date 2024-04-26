@@ -2,6 +2,7 @@
 
 # Remove all files and directories inside the "../store/" directory
 rm -rf store/*
+# rm -rf vecStore/*
 
 # Clear the terminal screen
 clear

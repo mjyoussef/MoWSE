@@ -57,6 +57,7 @@ const mr = function (config) {
         for (let i = 0; i < storeResults.length; i++) {
           const storeResult = storeResults[i];
           if (storeResult.status !== "fulfilled") {
+            console.log(storeResult);
             cb(
               new Error("Failed to store input keys in all.mr.exec"),
               undefined

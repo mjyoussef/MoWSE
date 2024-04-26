@@ -12,6 +12,7 @@ async function init(callback) {
       vector: Array.from({length: 50}, () => 0.0),
       url: '',
     }], {writeMode: db.WriteMode.Overwrite});
+    global.distribution.vecStore.delete('url = ""');
     // } else {
     //   global.distribution.vecStore = await local_db.openTable("vecStore");
     // }

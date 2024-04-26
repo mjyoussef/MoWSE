@@ -65,39 +65,44 @@ const crawlMap = (title, metadata) => {
 
             // embed the document
             const embed = global.distribution.local.index.embed;
-            const embedding = embed(lowerCaseWords, (e, v) => {}, false);
-            console.log("Completed requested: ", title);
+            const embedding = embed(lowerCaseWords, (e, v) => {}, true);
 
-            const links = page.links
-              ? page.links.map((link) => link.title)
-              : [];
+            // const links = page.links
+            //   ? page.links.map((link) => link.title)
+            //   : [];
 
-            const filteredLinks = links.filter(
-              (title) => !/[^\w\s]/.test(title)
-            );
-
-            let obj = {};
-            obj[title] = filteredLinks;
-            resolve(obj);
-
-            // store the embedding locally
-            // global.distribution.local.vecStore.put(
-            //   embedding,
-            //   { key: title, gid: gid },
-            //   (e, v) => {
-            //     if (e) {
-            //       reject(e);
-
-            //       return;
-            //     }
-            //     // get the links (titles)
-            //     const links = page.links
-            //       ? page.links.map((link) => link.title)
-            //       : [];
-            //     console.log("Here is a title", title);
-            //     resolve({ title: links });
-            //   }
+            // const filteredLinks = links.filter(
+            //   (title) => !/[^\w\s]/.test(title)
             // );
+
+            // let obj = {};
+            // obj[title] = filteredLinks;
+            // resolve(obj);
+
+            global.distribution.local.vecStore.put(
+              embedding,
+              { key: title, gid: gid },
+              (e, v) => {
+                if (e) {x
+                  reject(e);
+
+                  return;
+                }
+                // get the links (titles)
+                const links = page.links
+                  ? page.links.map((link) => link.title)
+                  : [];
+
+                const filteredLinks = links.filter(
+                  (title) => !/[^\w\s]/.test(title)
+                );
+
+                let obj = {};
+                obj[title] = filteredLinks;
+                console.log("Completed requested: ", title);
+                resolve(obj);
+              }
+            );
           })
           .catch((error) => {
             reject(error);
@@ -154,12 +159,13 @@ const crawl = async (
     return;
   }
 
+  let uniqueTitles = new Set();
   let count = 0;
   let it = 0;
   // while (count < 1000) {
-  while (it < 3) {
+  while (it < 8) {
     // MapReduce
-    console.log(it);
+    // console.log(it);
     it += 1;
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
@@ -201,6 +207,7 @@ const crawl = async (
               }
 
               // otherwise, assign the key-value pair a random access token
+              // const token = tokens[Math.floor(Math.random() * tokens.length)];
               const token = tokens[0];
               const tokenLimit = tokenLimits[token];
               let obj = {};
@@ -219,6 +226,10 @@ const crawl = async (
             }
           }
         }
+
+        inputs = inputs.sort(() => Math.random() - 0.5);
+        // inputs = inputs.slice(0, 2000);
+        inputs.slice(0, 2000);
 
         // if all of the access tokens have been completely used up
         if (inputs.length === 0) {
@@ -240,26 +251,31 @@ const crawl = async (
           }
 
           // aggregate the extracted pages and resolve
+          let newTitles = new Set();
           results.forEach((result) => {
             const elts = result[Object.keys(result)[0]];
-            elts.forEach((e) => titles.add(e));
+            if (elts) {
+              elts.forEach((e) => newTitles.add(e));
+            }
           });
 
-          console.log(titles);
-
-          resolve(titles);
+          resolve(newTitles);
         });
       });
     });
 
     try {
-      const titles = await mrIterationPromise;
+      let newTitles = await mrIterationPromise;
+      newTitles.forEach((title) => uniqueTitles.add(title));
       // console.log(titles);
-      count += titles.size;
+      // count += newTitles.size;
       // console.log("Here is titles", titles);
 
       // either because access tokens have been completely used
       // or all the pages have been crawled.
+      console.log("Total number of unique extracted URLs: ", uniqueTitles.size);
+
+      titles = newTitles;
       if (titles.size === 0) {
         cb(undefined, true);
         return;
@@ -286,10 +302,24 @@ let localServer = null;
 const n1 = { ip: "127.0.0.1", port: 7110 };
 const n2 = { ip: "127.0.0.1", port: 7111 };
 const n3 = { ip: "127.0.0.1", port: 7112 };
+// const n4 = { ip: "127.0.0.1", port: 7113 };
+// const n5 = { ip: "127.0.0.1", port: 7114 };
+// const n6 = { ip: "127.0.0.1", port: 7115 };
+// const n7 = { ip: "127.0.0.1", port: 7116 };
+// const n8 = { ip: "127.0.0.1", port: 7117 };
+// const n9 = { ip: "127.0.0.1", port: 7118 };
+// const n10 = { ip: "127.0.0.1", port: 7119 };
 
 crawlGroup[id.getSID(n1)] = n1;
 crawlGroup[id.getSID(n2)] = n2;
 crawlGroup[id.getSID(n3)] = n3;
+// crawlGroup[id.getSID(n4)] = n4;
+// crawlGroup[id.getSID(n5)] = n5;
+// crawlGroup[id.getSID(n6)] = n6;
+// crawlGroup[id.getSID(n7)] = n7;
+// crawlGroup[id.getSID(n8)] = n8;
+// crawlGroup[id.getSID(n9)] = n9;
+// crawlGroup[id.getSID(n10)] = n10;
 
 distribution.node.start((server) => {
   localServer = server;
@@ -297,7 +327,7 @@ distribution.node.start((server) => {
   groupsTemplate(crawlConfig).put("crawl", crawlGroup, (e, v) => {
     crawl(
       "naiveHash",
-      0.2,
+      0.01,
       100,
       "crawl",
       "./engine/titles.txt",

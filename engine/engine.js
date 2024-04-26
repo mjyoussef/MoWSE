@@ -1,6 +1,6 @@
-const id = distribution.util.id;
 const readline = require('readline');
 const distribution = require('../distribution');
+const id = distribution.util.id;
 // const { embed } = require('../distribution/local');
 global.nodeConfig = { ip: "127.0.0.1", port: 7080 };
 const groupsTemplate = require("../distribution/all/groups");
