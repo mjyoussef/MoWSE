@@ -1,31 +1,31 @@
 global.nodeConfig = {ip: '127.0.0.1', port: 8080};
-const distribution = require('../distribution');
+const {expect} = require('@jest/globals');
+const distribution = require('../distribution.js');
 const id = distribution.util.id;
-
 const groupsTemplate = require('../distribution/all/groups');
+
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+// This group is used for testing most of the functionality
 const mygroupGroup = {};
 
-/*
-   This hack is necessary since we can not
-   gracefully stop the local listening node.
-   This is because the process that node is
-   running in is the actual jest process
-*/
-let localServer = null;
+const n1 = {ip: '127.0.0.1', port: 8001};
+const n2 = {ip: '127.0.0.1', port: 8002};
+const n3 = {ip: '127.0.0.1', port: 8003};
 
 beforeAll((done) => {
-  const n1 = {ip: '127.0.0.1', port: 8000};
-  const n2 = {ip: '127.0.0.1', port: 8001};
-  const n3 = {ip: '127.0.0.1', port: 8002};
-
   // First, stop the nodes if they are running
   let remote = {service: 'status', method: 'stop'};
+
   remote.node = n1;
   distribution.local.comm.send([], remote, (e, v) => {
     remote.node = n2;
     distribution.local.comm.send([], remote, (e, v) => {
       remote.node = n3;
-      distribution.local.comm.send([], remote, (e, v) => {});
+      distribution.local.comm.send([], remote, (e, v) => {
+      });
     });
   });
 
@@ -36,57 +36,34 @@ beforeAll((done) => {
   // Now, start the base listening node
   distribution.node.start((server) => {
     localServer = server;
-    // Now, start the nodes
+
+    const groupInstantiation = (e, v) => {
+      const mygroupConfig = {gid: 'mygroup'};
+
+      // Create some groups
+      groupsTemplate(mygroupConfig).put('mygroup', mygroupGroup, (e, v) => {
+        done();
+      });
+    };
+
+    // Start the nodes
     distribution.local.status.spawn(n1, (e, v) => {
       distribution.local.status.spawn(n2, (e, v) => {
-        distribution.local.status.spawn(n3, (e, v) => {
-          groupsTemplate({gid: 'mygroup'}).put(
-              'mygroup',
-              mygroupGroup,
-              (e, v) => {
-                done();
-              },
-          );
-        });
+        distribution.local.status.spawn(n3, groupInstantiation);
       });
     });
   });
-});
+}, 1000*60*2);
 
 afterAll((done) => {
   distribution.mygroup.status.stop((e, v) => {
-    const nodeToSpawn = {ip: '127.0.0.1', port: 8008};
-    let remote = {node: nodeToSpawn, service: 'status', method: 'stop'};
+    let remote = {service: 'status', method: 'stop'};
+    remote.node = n1;
     distribution.local.comm.send([], remote, (e, v) => {
-      localServer.close();
-      done();
-    });
-  });
-});
-
-test('all routes test', (done) => {
-  const newService = {};
-  newService.mult = (arg1, arg2) => {
-    return arg1 * arg2;
-  };
-
-  distribution.mygroup.routes.put(newService, 'mult', (e, v) => {
-    const n1 = {ip: '127.0.0.1', port: 8000};
-    const n2 = {ip: '127.0.0.1', port: 8001};
-    const n3 = {ip: '127.0.0.1', port: 8002};
-    const r1 = {node: n1, service: 'routes', method: 'get'};
-    const r2 = {node: n2, service: 'routes', method: 'get'};
-    const r3 = {node: n3, service: 'routes', method: 'get'};
-
-    distribution.local.comm.send(['mult'], r1, (e, v) => {
-      expect(e).toBeFalsy();
-      expect(v.mult(2, 4)).toEqual(8);
-      distribution.local.comm.send(['mult'], r2, (e, v) => {
-        expect(e).toBeFalsy();
-        expect(v.mult(10, 10)).toEqual(100);
-        distribution.local.comm.send(['mult'], r3, (e, v) => {
-          expect(e).toBeFalsy();
-          expect(v.mult(-5, 4)).toEqual(-20);
+      remote.node = n2;
+      distribution.local.comm.send([], remote, (e, v) => {
+        remote.node = n3;
+        distribution.local.comm.send([], remote, (e, v) => {
           done();
         });
       });
@@ -94,65 +71,114 @@ test('all routes test', (done) => {
   });
 });
 
-test('all status test', (done) => {
-  const nids = Object.values(mygroupGroup).map((node) => id.getNID(node));
+test('all.comm.send(index.embed(text))', (done) => {
+  const remote = {service: 'index', method: 'embed'};
+  const text = 'The quick brown fox jumps over the lazy dog';
+  const words = text.toLowerCase().split(' ');
 
-  distribution.mygroup.status.get('heapUsed', (e, v) => {
-    expect(e).toEqual({});
-    expect(Object.values(v).length).toBe(nids.length);
-    done();
+  function cosineSim(vector1, vector2) {
+    let dotProduct = 0;
+    let magnitude1 = 0;
+    let magnitude2 = 0;
+
+    for (let i = 0; i < vector1.length; i++) {
+      dotProduct += vector1[i] * vector2[i];
+      magnitude1 += Math.pow(vector1[i], 2);
+      magnitude2 += Math.pow(vector2[i], 2);
+    }
+
+    magnitude1 = Math.sqrt(magnitude1);
+    magnitude2 = Math.sqrt(magnitude2);
+
+    return dotProduct / (magnitude1 * magnitude2);
+  };
+
+  distribution.mygroup.comm.send([words], remote, (e, v) => {
+    try {
+      expect(e).toEqual({});
+      results = [];
+      keys = Object.keys(v);
+      for (let i = 0; i < keys.length; i++) {
+        results.push(v[keys[i]]);
+      }
+      expect(results[0].sort()).toEqual(results[1].sort());
+      expect(results[0].sort()).toEqual(results[2].sort());
+      expect(Math.round(cosineSim(results[0], results[1]))).toEqual(1.0);
+      done();
+    } catch (error) {
+      done(error);
+    }
   });
 });
 
-test('status check heaptotal', (done) => {
-  distribution.mygroup.status.get('heapTotal', (e, v) => {
-    // console.log(e);
-    // console.log(v);
-    expect(e).toEqual({});
-    expect(v).toBeGreaterThan(100000);
-    done();
-  });
-});
+test('vecStore', (done) => {
+  embed = distribution.local.index.embed;
+  length = 50;
+  d1 = {
+    url: 'https://en.wikipedia.org/wiki/Rome',
+    vec: embed('This is about Rome'.toLowerCase().split(' ')),
+  };
+  d2 = {
+    url: 'https://en.wikipedia.org/wiki/Ancient_Rome',
+    vec: embed('This is about Ancient Rome'.toLowerCase().split(' ')),
+  };
+  d3 = {
+    url: 'https://en.wikipedia.org/wiki/Greece',
+    vec: embed('This is about Greece'.toLowerCase().split(' ')),
+  };
+  d4 = {
+    url: 'https://en.wikipedia.org/wiki/Kingdom_of_Greece',
+    vec: embed('This is about the Kingdom of Greece'.toLowerCase().split(' ')),
+  };
+  d5 = {
+    url: 'https://en.wikipedia.org/wiki/Pizza',
+    vec: embed('This is about Pizza'.toLowerCase().split(' ')),
+  };
+  d6 = {
+    url: 'https://en.wikipedia.org/wiki/Brown_University',
+    vec: embed('This is about Brown University'.toLowerCase().split(' ')),
+  };
+  d7 = {
+    url: 'https://en.wikipedia.org/wiki/Computer_science',
+    vec: embed('This is about Computer Science'.toLowerCase().split(' ')),
+  };
 
-test('all groups test', (done) => {
-  distribution.mygroup.groups.get('random', (e, v) => {
-    Object.keys(mygroupGroup).forEach((sid) => {
-      expect(e[sid]).toBeDefined();
-      expect(e[sid]).toBeInstanceOf(Error);
-    });
-    expect(v).toEqual({});
-    done();
-  });
-});
+  queryTerm = ['school'];
+  count = 3;
 
-test('all send test', (done) => {
-  const sids = Object.values(mygroupGroup).map((node) => id.getSID(node));
-  const remote = {service: 'status', method: 'get'};
-  distribution.mygroup.comm.send(['sid'], remote, (e, v) => {
-    expect(e).toEqual({});
-    expect(Object.values(v).length).toBe(sids.length);
-    expect(Object.values(v)).toEqual(expect.arrayContaining(sids));
-    done();
-  });
-});
-
-test('all gossip test', (done) => {
-  distribution.mygroup.groups.put('newgroup', {}, (e, v) => {
-    let newNode = {ip: '127.0.0.1', port: 4444};
-    let message = ['newgroup', newNode];
-
-    let remote = {service: 'groups', method: 'add'};
-    distribution.mygroup.gossip.send(message, remote, (e, v) => {
-      distribution.mygroup.groups.get('newgroup', (e, v) => {
-        let count = 0;
-        for (const k in v) {
-          if (Object.keys(v[k]).length > 0) {
-            count++;
-          }
-        }
-        /* Gossip only provides weak guarantees */
-        expect(count).toEqual(3);
-        done();
+  distribution.mygroup.vecStore.put(d1.url, d1.vec, (e, v) => {
+    expect(e).toBeFalsy();
+    distribution.mygroup.vecStore.put(d2.url, d2.vec, (e, v) => {
+      expect(e).toBeFalsy();
+      distribution.mygroup.vecStore.put(d3.url, d3.vec, (e, v) => {
+        expect(e).toBeFalsy();
+        distribution.mygroup.vecStore.put(d4.url, d4.vec, (e, v) => {
+          expect(e).toBeFalsy();
+          distribution.mygroup.vecStore.put(d5.url, d5.vec, (e, v) => {
+            expect(e).toBeFalsy();
+            distribution.mygroup.vecStore.put(d6.url, d6.vec, (e, v) => {
+              expect(e).toBeFalsy();
+              distribution.mygroup.vecStore.put(d7.url, d7.vec, (e, v) => {
+                expect(e).toBeFalsy();
+                console.log('querying');
+                distribution.mygroup.vecStore.query(queryTerm, (e, v) => {
+                  try {
+                    expect(e).toBeFalsy();
+                    expect(v.length).toEqual(count);
+                    let msg = `Top ${count} results for '${queryTerm}':`;
+                    for (let i = 0; i < count; i++) {
+                      msg += `\n  ${v[i]}`;
+                    }
+                    console.log(msg);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                }, k=count);
+              });
+            });
+          });
+        });
       });
     });
   });

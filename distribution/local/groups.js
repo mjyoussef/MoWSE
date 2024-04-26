@@ -1,11 +1,5 @@
-const id = require('../util/id');
+const id = global.distribution.util.id;
 const config = require('./config.js');
-
-const commTemplate = require('../all/comm');
-const groupsTemplate = require('../all/groups');
-const routesTemplate = require('../all/routes');
-const statusTemplate = require('../all/status');
-const gossipTemplate = require('../all/gossip');
 
 const groups = {};
 
@@ -38,11 +32,15 @@ groups.put = (groupName, nodes, cb) => {
   };
 
   global.distribution[groupName] = {
-    comm: commTemplate(context),
-    groups: groupsTemplate(context),
-    status: statusTemplate(context),
-    routes: routesTemplate(context),
-    gossip: gossipTemplate(context),
+    comm: global.distribution.commTemplate(context),
+    groups: global.distribution.groupsTemplate(context),
+    status: global.distribution.statusTemplate(context),
+    routes: global.distribution.routesTemplate(context),
+    gossip: global.distribution.gossipTemplate(context),
+    mem: global.distribution.memTemplate(context),
+    store: global.distribution.storeTemplate(context),
+    mr: global.distribution.mrTemplate(context),
+    vecStore: global.distribution.vecStoreTemplate(context),
   };
 
   callback(null, nodes);

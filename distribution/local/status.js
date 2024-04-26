@@ -1,9 +1,8 @@
-const id = require('../util/id');
+const id = global.distribution.util.id;
+const path = global.distribution.path;
+const serialize = global.distribution.util.serialize;
+const wire = global.distribution.util.wire;
 const {fork} = require('child_process');
-const path = require('path');
-
-const serialization = require('../util/serialization');
-const wire = require('../util/wire.js');
 
 const status = {};
 
@@ -55,7 +54,7 @@ status.spawn = (configuration, callback) => {
   }
 
   const file = path.join(__dirname, '../../', 'distribution.js');
-  const args = ['--config', serialization.serialize(newConfig)];
+  const args = ['--config', serialize(newConfig)];
 
   fork(file, args);
 };
