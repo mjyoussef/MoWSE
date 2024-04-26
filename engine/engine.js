@@ -2,16 +2,16 @@ const id = distribution.util.id;
 const readline = require('readline');
 const distribution = require('../distribution');
 // const { embed } = require('../distribution/local');
-global.nodeConfig = { ip: "127.0.0.1", port: 7080 };
-const groupsTemplate = require("../distribution/all/groups");
+global.nodeConfig = {ip: '127.0.0.1', port: 7080};
+const groupsTemplate = require('../distribution/all/groups');
 
 const crawlGroup = {};
 
 let localServer = null;
 
-const n1 = { ip: "127.0.0.1", port: 7110 };
-const n2 = { ip: "127.0.0.1", port: 7111 };
-const n3 = { ip: "127.0.0.1", port: 7112 };
+const n1 = {ip: '127.0.0.1', port: 7110};
+const n2 = {ip: '127.0.0.1', port: 7111};
+const n3 = {ip: '127.0.0.1', port: 7112};
 
 crawlGroup[id.getSID(n1)] = n1;
 crawlGroup[id.getSID(n2)] = n2;
@@ -19,7 +19,7 @@ crawlGroup[id.getSID(n3)] = n3;
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 function askQuestion() {
@@ -28,7 +28,7 @@ function askQuestion() {
     const vecStore = distribution.crawl.vecStore;
     if (query.toLowerCase() == 'halt') {
       rl.close();
-      localServer.close()
+      localServer.close();
     } else {
       vecStore.query(query.toLowerCase().split(' '), (e, v) => {
         if (e) {
@@ -45,39 +45,38 @@ function askQuestion() {
 distribution.node.start((server) => {
   localServer = server;
 
-  const crawlConfig = { gid: "crawl" };
-  groupsTemplate(crawlConfig).put("crawl", crawlGroup, (e, v) => {
+  const crawlConfig = {gid: 'crawl'};
+  groupsTemplate(crawlConfig).put('crawl', crawlGroup, (e, v) => {
     askQuestion();
   });
 });
 
-    // distribution.crawl.vecStore.put(d1.url, d1.vec, (e, v) => {
-    //   distribution.crawl.vecStore.put(d2.url, d2.vec, (e, v) => {
-    //     distribution.crawl.vecStore.put(d3.url, d3.vec, (e, v) => {
-    //       distribution.crawl.vecStore.put(d4.url, d4.vec, (e, v) => {
-    //         distribution.crawl.vecStore.put(d5.url, d5.vec, (e, v) => {
-    //           distribution.crawl.vecStore.put(d6.url, d6.vec, (e, v) => {
-    //             distribution.crawl.vecStore.put(d7.url, d7.vec, (e, v) => {
-    //               distribution.crawl.vecStore.put(d8.url, d8.vec, (e, v) => {
-    //                 distribution.crawl.vecStore.put(d9.url, d9.vec, (e, v) => {
-    //                   distribution.crawl.vecStore.put(d10.url, d10.vec, (e, v) => {
-    //                     askQuestion();
-    //                   });
-    //                 });
-    //               });
-    //             });
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-
+// distribution.crawl.vecStore.put(d1.url, d1.vec, (e, v) => {
+//   distribution.crawl.vecStore.put(d2.url, d2.vec, (e, v) => {
+//     distribution.crawl.vecStore.put(d3.url, d3.vec, (e, v) => {
+//       distribution.crawl.vecStore.put(d4.url, d4.vec, (e, v) => {
+//         distribution.crawl.vecStore.put(d5.url, d5.vec, (e, v) => {
+//           distribution.crawl.vecStore.put(d6.url, d6.vec, (e, v) => {
+//             distribution.crawl.vecStore.put(d7.url, d7.vec, (e, v) => {
+//               distribution.crawl.vecStore.put(d8.url, d8.vec, (e, v) => {
+//                 distribution.crawl.vecStore.put(d9.url, d9.vec, (e, v) => {
+//                   distribution.crawl.vecStore.put(d10.url, d10.vec, (e, v) => {
+//                     askQuestion();
+//                   });
+//                 });
+//               });
+//             });
+//           });
+//         });
+//       });
+//     });
+//   });
+// });
 
 
 // t1 = 'Rome (Italian and Latin: Roma, Italian: [ˈroːma] ⓘ) is the capital city of Italy. It is also the capital of the Lazio region, the centre of the Metropolitan City of Rome Capital, and a special comune (municipality) named Comune di Roma Capitale. With 2,860,009 residents in 1,285 km2 (496.1 sq mi), Rome is the country most populated comune and the third most populous city in the European Union by population within city limits. The Metropolitan City of Rome, with a population of 4,355,725 residents, is the most populous metropolitan city in Italy. Its metropolitan area is the third-most populous within Italy. Rome is located in the central-western portion of the Italian Peninsula, within Lazio Latium, along the shores of the Tiber. Vatican City the smallest country in the world is an independent country inside the city boundaries of Rome, the only existing example of a country within a city. Rome is often referred to as the City of Seven Hills due to its geographic location, and also as the "Eternal City". Rome is generally considered to be the cradle of Western civilization and Western Christian culture, and the centre of the Catholic Church.';
 // d1 = {
-//   url: 'https://en.wikipedia.org/wiki/Rome', 
+//   url: 'https://en.wikipedia.org/wiki/Rome',
 //   vec: embed(t1.toLowerCase().split(' ')),
 // };
 // t2 = 'In modern historiography, ancient Rome encompasses the founding of the Italian city of Rome in the 8th century BC, the Roman Kingdom (753–509 BC), Roman Republic (509–27 BC), Roman Empire (27 BC– 395 AD), and the collapse of the Western Roman Empire in the 5th century AD. Ancient Rome began as an Italic settlement, traditionally dated to 753 BC, beside the River Tiber in the Italian Peninsula.';
