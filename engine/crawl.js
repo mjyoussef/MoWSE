@@ -162,7 +162,7 @@ const crawl = async (
   let uniqueTitles = new Set();
   let it = 0;
   // while (count < 1000) {
-  while (it < 3) {
+  while (it < 5) {
     // MapReduce
     // console.log(it);
     it += 1;
