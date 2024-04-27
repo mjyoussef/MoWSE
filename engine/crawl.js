@@ -67,42 +67,42 @@ const crawlMap = (title, metadata) => {
             const embed = global.distribution.local.index.embed;
             const embedding = embed(lowerCaseWords, (e, v) => {}, true);
 
-            // const links = page.links
-            //   ? page.links.map((link) => link.title)
-            //   : [];
+            const links = page.links
+              ? page.links.map((link) => link.title)
+              : [];
 
-            // const filteredLinks = links.filter(
-            //   (title) => !/[^\w\s]/.test(title)
-            // );
-
-            // let obj = {};
-            // obj[title] = filteredLinks;
-            // resolve(obj);
-
-            global.distribution.local.vecStore.put(
-              embedding,
-              { key: title, gid: gid },
-              (e, v) => {
-                if (e) {x
-                  reject(e);
-
-                  return;
-                }
-                // get the links (titles)
-                const links = page.links
-                  ? page.links.map((link) => link.title)
-                  : [];
-
-                const filteredLinks = links.filter(
-                  (title) => !/[^\w\s]/.test(title)
-                );
-
-                let obj = {};
-                obj[title] = filteredLinks;
-                console.log("Completed requested: ", title);
-                resolve(obj);
-              }
+            const filteredLinks = links.filter(
+              (title) => !/[^\w\s]/.test(title)
             );
+
+            let obj = {};
+            obj[title] = filteredLinks;
+            resolve(obj);
+
+            // global.distribution.local.vecStore.put(
+            //   embedding,
+            //   { key: title, gid: gid },
+            //   (e, v) => {
+            //     if (e) {x
+            //       reject(e);
+
+            //       return;
+            //     }
+            //     // get the links (titles)
+            //     const links = page.links
+            //       ? page.links.map((link) => link.title)
+            //       : [];
+
+            //     const filteredLinks = links.filter(
+            //       (title) => !/[^\w\s]/.test(title)
+            //     );
+
+            //     let obj = {};
+            //     obj[title] = filteredLinks;
+            //     console.log("Completed requested: ", title);
+            //     resolve(obj);
+            //   }
+            // );
           })
           .catch((error) => {
             reject(error);
@@ -162,7 +162,7 @@ const crawl = async (
   let uniqueTitles = new Set();
   let it = 0;
   // while (count < 1000) {
-  while (it < 8) {
+  while (it < 4) {
     // MapReduce
     // console.log(it);
     it += 1;
