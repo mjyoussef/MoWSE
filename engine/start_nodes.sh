@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Remove all files and directories inside the "../store/" directory
-rm -rf vecStore_data/*
+rm -rf vecStoreData/*
 # rm -rf vecStore/*
 
 # Clear the terminal screen

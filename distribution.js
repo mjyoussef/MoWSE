@@ -12,12 +12,12 @@ global.nodeConfig = global.nodeConfig || {
 };
 
 /*
-    As a debugging tool, you can pass ip and port arguments directly.
-    This is just to allow for you to easily startup nodes from the terminal.
+  As a debugging tool, you can pass ip and port arguments directly.
+  This is just to allow for you to easily startup nodes from the terminal.
 
-    Usage:
-    ./distribution.js --ip '127.0.0.1' --port 1234
-  */
+  Usage:
+  ./distribution.js --ip '127.0.0.1' --port 1234
+*/
 if (args.ip) {
   global.nodeConfig.ip = args.ip;
 }
@@ -58,9 +58,6 @@ global.distribution["all"].status = require("./distribution/all/status.js")({
 global.distribution["all"].comm = require("./distribution/all/comm.js")({
   gid: "all",
 });
-global.distribution["all"].gossip = require("./distribution/all/gossip.js")({
-  gid: "all",
-});
 global.distribution["all"].groups = require("./distribution/all/groups.js")({
   gid: "all",
 });
@@ -85,7 +82,6 @@ global.distribution.commTemplate = require("./distribution/all/comm.js");
 global.distribution.groupsTemplate = require("./distribution/all/groups.js");
 global.distribution.statusTemplate = require("./distribution/all/status.js");
 global.distribution.routesTemplate = require("./distribution/all/routes.js");
-global.distribution.gossipTemplate = require("./distribution/all/gossip.js");
 global.distribution.memTemplate = require("./distribution/all/mem.js");
 global.distribution.storeTemplate = require("./distribution/all/store.js");
 global.distribution.mrTemplate = require("./distribution/all/mr.js");

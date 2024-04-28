@@ -1,4 +1,12 @@
+/* Checks the status of every node in the group.
+
+PARAMETERS:
+context: stores the group ID
+configuration: field to check (ie. SID, memory usage, etc)
+callback: an optional callback
+*/
 const get = (context, configuration, callback) => {
+  callback = callback || function(e, v) {};
   const message = [configuration];
   const remote = {service: 'status', method: 'get'};
   global.distribution[context.gid].comm.send(message, remote, (e, v) => {
@@ -11,6 +19,12 @@ const get = (context, configuration, callback) => {
   });
 };
 
+/* Stops all nodes in the group.
+
+PARAMETERS:
+context: stores the group ID
+callback: an optional callback
+*/
 const stop = (context, callback) => {
   const remote = {service: 'status', method: 'stop'};
   global.distribution[context.gid].comm.send([], remote, (e, v) => {
@@ -18,6 +32,13 @@ const stop = (context, callback) => {
   });
 };
 
+/* Spawns a node in the group.
+
+PARAMETERS:
+context: stores the group ID
+nodeConfig: node configuration
+callback: an optional callback
+*/
 const spawn = (context, nodeConfig, callback) => {
   global.distribution.local.status.spawn(nodeConfig, (e1, v1) => {
     global.distribution[context.gid].groups.add(

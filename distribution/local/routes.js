@@ -1,7 +1,6 @@
 const comm = require('./comm');
 const status = require('./status');
 const groups = require('./groups');
-const gossip = require('./gossip');
 const mem = require('./mem');
 const store = require('./store');
 const mr = require('./mr');
@@ -43,7 +42,6 @@ routesStore.routes = routes;
 routesStore.comm = comm;
 routesStore.status = status;
 routesStore.groups = groups;
-routesStore.gossip = gossip;
 routesStore.mem = mem;
 routesStore.store = store;
 routesStore.mr = mr;

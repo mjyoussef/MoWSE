@@ -4,6 +4,12 @@ const comm = require("./comm");
 
 const mr = {};
 
+/* Calls map function on inputs from local storage
+and forwards results to reducers.
+
+args: map arguments
+cb: an optional callback
+*/
 mr.map = (args, cb) => {
   /*
     args = {
@@ -108,6 +114,11 @@ mr.map = (args, cb) => {
   );
 };
 
+/* Calls reduce function on inputs from local storage.
+
+args: map arguments
+cb: an optional callback
+*/
 mr.reduce = (args, cb) => {
   /*
     args = {
@@ -159,6 +170,11 @@ mr.reduce = (args, cb) => {
   );
 };
 
+/* Stores reducer's inputs.
+
+args: map arguments
+cb: an optional callback
+*/
 mr.append = (args, cb) => {
   /*
     args = {

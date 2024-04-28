@@ -1,5 +1,12 @@
 const index = {};
 
+/* Computes a Mean of Words (MoW) embedding.
+
+PARAMETERS:
+inputs: a list of words
+callback: an optional callback
+tfidf: whether to store/use tfidf values
+*/
 function embed(inputs, callback, tfidf = false) {
   let model = global.distribution.embeddings;
   // console.log(doc);

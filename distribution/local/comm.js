@@ -1,10 +1,14 @@
-const http = require('http');
-const serialize = global.distribution.util.serialize;
-const deserialize = global.distribution.util.deserialize;
-
 const comm = {};
 
+/* Requests a service/method invocation on a node.
+
+message: arguments
+remote: node, service, and method
+cb: an optional callback
+*/
 comm.send = (message, remote, cb) => {
+  cb = cb || function(e, v) {};
+
   var remoteService = undefined;
   var remoteMethod = undefined;
   var remoteNode = undefined;
@@ -31,7 +35,7 @@ comm.send = (message, remote, cb) => {
     return;
   }
 
-  const data = serialize(message);
+  const data = global.distribution.util.serialize(message);
 
   const options = {
     method: 'PUT',
@@ -40,7 +44,7 @@ comm.send = (message, remote, cb) => {
     path: `/${remoteService}/${remoteMethod}`,
   };
 
-  const req = http.request(options, (res) => {
+  const req = global.distribution.http.request(options, (res) => {
     let responseData = '';
 
     if (res.statusCode >= 400) {
@@ -56,7 +60,7 @@ comm.send = (message, remote, cb) => {
     res.on('end', () => {
       // Handle the response data
       // console.log(responseData);
-      const deserializedData = deserialize(responseData);
+      const deserializedData = global.distribution.util.deserialize(responseData);
       if (deserializedData instanceof Error) {
         cb(deserializedData, undefined);
         return;

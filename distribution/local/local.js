@@ -3,7 +3,6 @@ Service  Description                                Methods
 status   Status and control of the current node     get, spawn, stop
 comm     A message communication interface          send
 groups   A mapping from group names to nodes        get, put, add, rem, del
-gossip   The receiver part of the gossip protocol   recv
 routes   A mapping from names to functions          get, put
 mem      An ephemeral (in-memory) store             get, put, del
 store    A persistent store                         get, put, del
@@ -29,9 +28,6 @@ const routes = require('./routes');
 /* Comm Service */
 const comm = require('./comm');
 
-/* Gossip Service */
-const gossip = require('./gossip');
-
 /* MapReduce service */
 const mr = require('./mr');
 
@@ -46,7 +42,6 @@ module.exports = {
   routes: routes,
   comm: comm,
   groups: groups,
-  gossip: gossip,
   mem: mem,
   store: store,
   mr: mr,

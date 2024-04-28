@@ -13,6 +13,11 @@ groups.nodeGroups = {
   },
 };
 
+/* Gets the nodes in a group.
+
+group: the group ID
+cb: an optional callback
+*/
 groups.get = (group, cb) => {
   const callback = cb || (() => {});
 
@@ -23,8 +28,14 @@ groups.get = (group, cb) => {
   }
 };
 
+/* Puts a list of nodes in a group.
+
+groupName: the group ID
+nodes: the list of nodes to add
+cb: an optional callback
+*/
 groups.put = (groupName, nodes, cb) => {
-  const callback = cb || (() => {});
+  const callback = cb || function(e, v) {};
   groups.nodeGroups[groupName] = nodes;
 
   const context = {
@@ -36,7 +47,6 @@ groups.put = (groupName, nodes, cb) => {
     groups: global.distribution.groupsTemplate(context),
     status: global.distribution.statusTemplate(context),
     routes: global.distribution.routesTemplate(context),
-    gossip: global.distribution.gossipTemplate(context),
     mem: global.distribution.memTemplate(context),
     store: global.distribution.storeTemplate(context),
     mr: global.distribution.mrTemplate(context),
@@ -46,8 +56,14 @@ groups.put = (groupName, nodes, cb) => {
   callback(null, nodes);
 };
 
+/* Adds a node to the group.
+
+groupName: the group ID
+node: the node to add
+cb: an optional callback
+*/
 groups.add = (groupName, node, cb) => {
-  const callback = cb || (() => {});
+  const callback = cb || function(e, v) {};
 
   const nodeSID = id.getSID(node);
   if (!(groupName in groups.nodeGroups)) {
@@ -61,8 +77,14 @@ groups.add = (groupName, node, cb) => {
   callback(null, node);
 };
 
+/* A node to remove from the group.
+
+groupName: the group ID
+nodeId: th id of the node
+cb: an optional callback
+*/
 groups.rem = (groupName, nodeId, cb) => {
-  const callback = cb || (() => {});
+  const callback = cb || function(e, v) {};
   if (
     !(groupName in groups.nodeGroups) ||
     !(nodeId in groups.nodeGroups[groupName])
@@ -77,8 +99,13 @@ groups.rem = (groupName, nodeId, cb) => {
   callback(null, nodeToDelete);
 };
 
+/* Deletes a group.
+
+groupName: the group ID
+cb: an optional callback
+*/
 groups.del = (groupName, cb) => {
-  const callback = cb || (() => {});
+  const callback = cb || function(e, v) {};
   if (!(groupName in groups.nodeGroups)) {
     callback(new Error(`group ${groupName} not found`));
     return;

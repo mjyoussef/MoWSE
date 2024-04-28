@@ -34,7 +34,16 @@ function traverseMapping(root, createDirs) {
   return [error, obj];
 }
 
+/* Gets the value for a given key.
+
+PARAMETERS:
+key: the key
+root: the directory storing the key
+cb: an optional callback
+*/
 mem.get = (key, root, cb) => {
+  cb = cb || function(e, v) {};
+
   // add the group to root
   if (key !== null && typeof key === "object") {
     root.push(key.gid);
@@ -80,7 +89,16 @@ mem.get = (key, root, cb) => {
   }
 };
 
+/* Puts a key-value object.
+
+PARAMETERS:
+value: the value
+key: the key
+root: the directory storing the key-value pair
+cb: an optional callback
+*/
 mem.put = (value, key, root, cb) => {
+  cb = cb || function(e, v) {};
   // add the group to root
   if (key !== null && typeof key === "object") {
     root.push(key.gid);
@@ -98,7 +116,15 @@ mem.put = (value, key, root, cb) => {
   }
 };
 
+/* Deletes a key-value from storage
+
+PARAMETERS:
+key: the key
+root: the directory storing the key-value pair
+cb: an optional callback
+*/
 mem.del = (key, root, cb) => {
+  cb = cb || function(e, v) {};
   // add the group to root
   if (key !== null && typeof key === "object") {
     root.push(key.gid);
