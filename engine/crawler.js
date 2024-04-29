@@ -147,6 +147,7 @@ const crawl = async (
   // current MapReduce iteration
   let it = 0;
   while (it < maxIters) {
+    console.log(maxIters);
     it += 1;
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
@@ -166,14 +167,15 @@ const crawl = async (
         */
 
         // shuffle
-        titles = titles.sort(() => Math.random() - 0.5);
+        let titlesLst = [...titles];
+        titlesLst = titlesLst.sort(() => Math.random() - 0.5);
 
         // prune
-        let spliceIdx = min(len(titles), max(beta, int(len(titles)*alpha)));
-        titles.slice(0, spliceIdx);
+        let spliceIdx = Math.min(titlesLst.length, Math.max(beta, Math.floor(titlesLst.length*alpha)));
+        titlesLst.slice(0, spliceIdx);
 
         // create the MapReduce inputs
-        let inputs = titles.map((title) => {
+        let inputs = titlesLst.map((title) => {
           let obj = {};
           obj[title] = {
             accessToken: accessToken,
@@ -182,6 +184,8 @@ const crawl = async (
           return obj;
         });
 
+        console.log(inputs);
+
         const args = {
           mrid: `mapReduceCrawl`,
           mapFn: crawlMap,
@@ -189,9 +193,10 @@ const crawl = async (
           inputs: inputs,
         };
 
-        // MapReduces
+        // MapReduce
         global.distribution[gid].mr.exec(args, (e, results) => {
           if (e) {
+            console.log(e);
             reject(e);
             return;
           }

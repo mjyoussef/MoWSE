@@ -84,7 +84,7 @@ if (require.main === module) {
 
       // add the nodes to the crawl group
       groupsTemplate({ gid: "crawl" }).put("crawl", crawlGroup, (e, v) => {
-        if (e) {
+        if (Object.keys(e).length > 0) {
           console.error('Failed to start at least one node.');
           return;
         }
@@ -95,7 +95,7 @@ if (require.main === module) {
           1000, // beta (want at least 1000 pages per iteration)
           'crawl', // gid
           ['Computer Science'], // titles
-          4, // maxIters
+          args.maxIters, // maxIters
           true, // log results to terminal
           (e, results) => {
             if (e) {
