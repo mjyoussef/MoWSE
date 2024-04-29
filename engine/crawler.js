@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { performance } = require('perf_hooks');
+const _ = require('lodash');
 
 /* Input key = title of page, input value = some metadata.
 `crawlMap` embeds the document, saves the embedding locally, and
@@ -167,8 +168,8 @@ const crawl = async (
         */
 
         // shuffle
-        let titlesLst = [...titles];
-        titlesLst = titlesLst.sort(() => Math.random() - 0.5);
+        let unshuffledTitlesLst = [...titles];
+        let titlesLst = _.shuffle(unshuffledTitlesLst);
 
         // prune
         let spliceIdx = Math.min(titlesLst.length, Math.max(beta, Math.floor(titlesLst.length*alpha)));
@@ -183,8 +184,6 @@ const crawl = async (
           };
           return obj;
         });
-
-        console.log(inputs);
 
         const args = {
           mrid: `mapReduceCrawl`,

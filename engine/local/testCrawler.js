@@ -36,6 +36,16 @@ if (require.main === module) {
     return;
   }
 
+  let alpha = 0.001;
+  let beta = 500;
+
+  if (args.alpha) {
+    alpha = args.alpha;
+  }
+  if (args.beta) {
+    beta = args.beta;
+  }
+
   /* CRAWLING
     1. Wait for all of the nodes to start.
     2. Begin crawling.
@@ -91,8 +101,8 @@ if (require.main === module) {
         
         // begin crawling
         crawler.crawl(
-          0.1, // alpha (pruning fraction)
-          1000, // beta (want at least 1000 pages per iteration)
+          alpha, // alpha
+          beta, // beta
           'crawl', // gid
           ['Computer Science'], // titles
           args.maxIters, // maxIters
@@ -105,7 +115,7 @@ if (require.main === module) {
 
             try {
               const resultsStr = JSON.stringify(results, null, 2);
-              fs.writeFileSync('./outputs.json', resultsStr);
+              fs.writeFileSync('./results.json', resultsStr);
               console.log("Finished crawling!");
             } catch (error) {
               console.error("Failed to write results to ./outputs.json");
