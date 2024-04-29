@@ -37,20 +37,19 @@ if (args.config) {
     : global.nodeConfig.onStart;
 }
 
+// global dependencies
 global.distribution = {};
 global.distribution.url = require("url");
-global.distribution.URL = require("url").URL;
 global.distribution.path = require("path");
 global.distribution.fs = require("fs");
-global.distribution.JSDOM = require("jsdom").JSDOM;
 global.distribution.dir = __dirname;
 global.distribution.http = require("http");
-global.distribution.https = require("https");
 global.distribution.util = require("./distribution/util/util.js");
 global.distribution.local = require("./distribution/local/local.js");
 global.distribution.node = require("./distribution/local/node.js");
 global.distribution.axios = require("axios");
 
+// all group (initialized by default)
 global.distribution["all"] = {};
 global.distribution["all"].status = require("./distribution/all/status.js")({
   gid: "all",
@@ -77,7 +76,7 @@ global.distribution["all"].vecStore = require("./distribution/all/vecStore.js")(
   }
 );
 
-// templates
+// templates (used when creating new groups)
 global.distribution.commTemplate = require("./distribution/all/comm.js");
 global.distribution.groupsTemplate = require("./distribution/all/groups.js");
 global.distribution.statusTemplate = require("./distribution/all/status.js");
@@ -87,8 +86,28 @@ global.distribution.storeTemplate = require("./distribution/all/store.js");
 global.distribution.mrTemplate = require("./distribution/all/mr.js");
 global.distribution.vecStoreTemplate = require("./distribution/all/vecStore.js");
 
+// access token (store in a Secrets Manager in the future)
+global.distribution.accessToken = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIyZjMy
+N2VkYmQ0MDMzMTdiOGQ1NDIzNTkzNWI2Njg1ZSIsImp0aSI6ImQ4YzJmNDI2ZDk2NzQxZTA
+1ODIwYzFiYjA2NzlmZDU2OGQwODAzZWJmNTZiYzkxM2YzNmIxNzIxNTgzODY2Y2FmMDhlN2
+I1NTNmMGFhM2EwIiwiaWF0IjoxNzEzNjc0MTUxLjI5Njc3LCJuYmYiOjE3MTM2NzQxNTEuM
+jk2NzczLCJleHAiOjMzMjcwNTgyOTUxLjI5NTQ4Niwic3ViIjoiNzU0Nzc1NDIiLCJpc3Mi
+OiJodHRwczovL21ldGEud2lraW1lZGlhLm9yZyIsInJhdGVsaW1pdCI6eyJyZXF1ZXN0c19
+wZXJfdW5pdCI6NTAwMCwidW5pdCI6IkhPVVIifSwic2NvcGVzIjpbImJhc2ljIl19.gTe9K
+AO72dLLO8i_ZdCV07PbqSexfcfckBt01i7cvOBNWeKny7QieA0m5KFq7sxjiweecd4FhdR1
+nZMZbpBC7UMYAEX2AvCIIkI_tF_SBZHduHzjN5A2hmaMBbUahGOCHGwcyVSQ-WUq41T7rzk
+8qWqhxZdOMIFVwLBvzRC56YUPA_tnHqa_Zrd9ENRlsTgT5Jta4l2smo1c5UZBPzBiPYYzNK
+7CLE5xAv543s9ceFAqwP3USY2vw3udr_Ye-vtH5vQpoqeleZFC3sh80AOXI2rAgXy3-3lVw
+Ze0Xn_LfGC0XsPIeYNBnCZZAisimlmB_iPS472abCCWPdntNXj37MdAu_vVabGyinLiDtAQ
+ZaRA5Qj1IaoDg7RD_8k3xi1tkqGV3eRn_-e7r0n9mP-KDISfHWdWp2cm6qfovGEhGmxWp7b
+IVUmaKkXSOvSmOEjC43IcEphRj-HQCWJb6DhxAlWdmLnek7FFCiabYyvjPJbtjzBCUSRDEO
+-E0JgqmvsGGADBO0hFd7jOvYUT4V2kcWp1vvLx-5-fz8yPXUsZwePvYdWkTlrJYMsPHpYAh
+1QtCZH83xYvQI3l84ZRq4jBRK57ksbkyPLUz77oIay2q_RmYDxLvJscsTpF21oJn8R7sQVg
+exW5DaPTGR_AnqY5IVxYo6XPPQeApSVtlJbWVW4`
+
 module.exports = global.distribution;
 
+// clear the vector database
 console.log("Starting vectordb");
 global.distribution.local.vecStore.init((e, v) => {
   if (e) {
@@ -97,6 +116,8 @@ global.distribution.local.vecStore.init((e, v) => {
     console.log(v);
   }
 });
+
+// load word embeddings into memory
 folderPath = "./distribution/util/glove_50d_split";
 global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
   if (e) {
