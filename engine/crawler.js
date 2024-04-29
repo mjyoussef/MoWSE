@@ -172,7 +172,7 @@ const crawl = async (
 
         // prune
         let spliceIdx = Math.min(titlesLst.length, Math.max(beta, Math.floor(titlesLst.length*alpha)));
-        titlesLst.slice(0, spliceIdx);
+        titlesLst = titlesLst.slice(0, spliceIdx);
 
         // create the MapReduce inputs
         let inputs = titlesLst.map((title) => {
