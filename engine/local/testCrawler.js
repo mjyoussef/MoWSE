@@ -173,78 +173,32 @@ if (require.main === module) {
       // Wait for instances to be running
       await waitForInstancesToBeRunning(instanceIds);
 
-      const describeParams = {
-        InstanceIds: instanceIds,
-      };
+      const describeData = await ec2.send(
+        new DescribeInstancesCommand({ InstanceIds: instanceIds })
+      );
 
-      ec2.describeInstances(describeParams, (err, describeData) => {
-        if (err) {
-          cb(new Error(err.message), undefined);
-          return;
-        }
+      // Extract IP addresses and ports
+      const instances = describeData.Reservations.flatMap(
+        (reservation) => reservation.Instances
+      );
 
-        // Extract IP addresses and ports
-        const instances = describeData.Reservations.flatMap(
-          (reservation) => reservation.Instances
-        );
+      const instanceDetails = instances.map((instance) => ({
+        ip: instance.PublicIpAddress,
+        port: "7070",
+      }));
 
-        const instanceDetails = instances.map((instance) => ({
-          ip: instance.PublicIpAddress,
-          port: "7070",
-        }));
+      console.log("INSTANCE DETAILS", instanceDetails);
 
-        console.log("INSTANCE DETAILS", instanceDetails);
-
-        instanceDetails.forEach((node) => {
-          let sid = distribution.util.id.getSID(node);
-          crawlGroup[sid] = node;
-        });
-
-        cb(undefined, true);
+      instanceDetails.forEach((node) => {
+        let sid = distribution.util.id.getSID(node);
+        crawlGroup[sid] = node;
       });
+
+      cb(undefined, true);
     } catch (error) {
       console.error("error launching instances:", error);
       cb(error, false);
     }
-
-    // ec2.runInstances(instanceParams, (error, data) => {
-    //   if (error) {
-    //     cb(new Error(error.message), undefined);
-    //     return;
-    //   }
-
-    //   const instanceIds = data.Instances.map((instance) => instance.InstanceId);
-
-    //   // get the IP and ports
-    //   // and add them to the IP and ports
-    //   const describeParams = {
-    //     InstanceIds: instanceIds,
-    //   };
-
-    //   ec2.describeInstances(describeParams, (err, describeData) => {
-    //     if (err) {
-    //       cb(new Error(err.message), undefined);
-    //       return;
-    //     }
-
-    //     // Extract IP addresses and ports
-    //     const instances = describeData.Reservations.flatMap(
-    //       (reservation) => reservation.Instances
-    //     );
-
-    //     const instanceDetails = instances.map((instance) => ({
-    //       ip: instance.PublicIpAddress,
-    //       port: "7070",
-    //     }));
-
-    //     instanceDetails.forEach((node) => {
-    //       let sid = distribution.util.id.getSID(node);
-    //       crawlGroup[sid] = node;
-    //     });
-
-    //     cb(undefined, true);
-    //   });
-    // });
   };
 
   distribution.node.start((server) => {
