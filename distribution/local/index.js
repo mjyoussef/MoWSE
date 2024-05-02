@@ -9,7 +9,6 @@ const index = {};
  * @param {boolean} [tfidf=false] - whether to weight words using tf-idf scores
  * @return {number[]} - a vector embedding
  */
-
 function embed(inputs, callback, tfidf = false) {
   // GloVe embeddings
   let model = global.distribution.embeddings;

@@ -9,6 +9,13 @@ const index = require("./index");
 const routesStore = new Map();
 const routes = {};
 
+/**
+ * Puts a new service.
+ *
+ * @param {Object} service - the service
+ * @param {string} name - the name of the service
+ * @param {Function} cb - an optional callback
+ */
 routes.put = (service, name, cb) => {
   routesStore[name] = service;
   if (cb) {
@@ -18,6 +25,12 @@ routes.put = (service, name, cb) => {
   }
 };
 
+/**
+ * Gets a service.
+ *
+ * @param {string} the - name of the service
+ * @param {Function} cb - an optional callback
+ */
 routes.get = (name, cb) => {
   if (!cb) {
     return;

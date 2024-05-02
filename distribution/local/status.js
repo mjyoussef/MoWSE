@@ -12,22 +12,33 @@ global.moreStatus = {
   counts: 0,
 };
 
-status.get = function (configuration, callback) {
+/**
+ * Checks an attribute of the node (ie. memory usage, sid, nid, etc).
+ *
+ * @param {string} attribute - the attribute to check
+ * @param {Function} callback - an optional callback
+ */
+status.get = function (attribute, callback) {
   callback = callback || function () {};
 
-  if (configuration in global.nodeConfig) {
-    callback(null, global.nodeConfig[configuration]);
-  } else if (configuration in moreStatus) {
-    callback(null, moreStatus[configuration]);
-  } else if (configuration === "heapTotal") {
+  if (attribute in global.nodeConfig) {
+    callback(null, global.nodeConfig[attribute]);
+  } else if (attribute in moreStatus) {
+    callback(null, moreStatus[attribute]);
+  } else if (attribute === "heapTotal") {
     callback(null, process.memoryUsage().heapTotal);
-  } else if (configuration === "heapUsed") {
+  } else if (attribute === "heapUsed") {
     callback(null, process.memoryUsage().heapUsed);
   } else {
     callback(new Error("Status key not found"));
   }
 };
 
+/**
+ * Stops the node's server.
+ *
+ * @param {Function} callback - an optional callback
+ */
 status.stop = (callback) => {
   global.server.close();
   setTimeout(() => {
@@ -37,6 +48,12 @@ status.stop = (callback) => {
   callback(null, global.nodeConfig);
 };
 
+/**
+ * Spawns a node.
+ *
+ * @param {Object} configuration - the configuration of the node
+ * @param {Function} callback - an optional callback
+ */
 status.spawn = (configuration, callback) => {
   const callbackRPC = wire.createRPC(callback);
 

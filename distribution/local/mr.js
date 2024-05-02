@@ -4,12 +4,12 @@ const comm = require("./comm");
 
 const mr = {};
 
-/* Calls map function on inputs from local storage
-and forwards results to reducers.
-
-args: map arguments
-cb: an optional callback
-*/
+/**
+ * Computes map results and forwards to reducers
+ *
+ * @param {Object} args - the gid, mrid, map function, hash function
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mr.map = (args, cb) => {
   /*
     args = {
@@ -114,11 +114,12 @@ mr.map = (args, cb) => {
   );
 };
 
-/* Calls reduce function on inputs from local storage.
-
-args: map arguments
-cb: an optional callback
-*/
+/**
+ * Reduces and return
+ *
+ * @param {Object} args - the gid, mrid, reduce function
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mr.reduce = (args, cb) => {
   /*
     args = {
@@ -170,11 +171,12 @@ mr.reduce = (args, cb) => {
   );
 };
 
-/* Stores reducer's inputs.
-
-args: map arguments
-cb: an optional callback
-*/
+/**
+ * Stores a list of key-value pairs for reducing.
+ *
+ * @param {Object} args - the gid, mrid, list of key-value pairs
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mr.append = (args, cb) => {
   /*
     args = {
