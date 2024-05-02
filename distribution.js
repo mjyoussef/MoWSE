@@ -115,13 +115,4 @@ global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
 /* The following code is run when distribution.js is run directly */
 if (require.main === module) {
   distribution.node.start(global.nodeConfig.onStart);
-
-  const inputs = [
-    ["hello", "there", "this", "is", 0.2],
-    ["this", "is", "another", "test", 0.4],
-    ["hello", "again", "missspe2342lled", 0.4],
-  ];
-
-  out = global.distribution.local.index.embed(inputs, (e, v) => {}, true);
-  console.log(out);
 }
