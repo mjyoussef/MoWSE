@@ -5,9 +5,13 @@ const fs = require('fs');
 /*
 EXAMPLE USAGE:
 
-`./testCrawler.js --maxIters 4 --numNodes 3`
+`./testCrawler.js --maxIters 4 --numNodes 3` will run the crawler
+using 4 MapReduce iterations and 3 nodes.
 
-runs the crawler using at most 4 MapReduce iterations and 3 nodes.
+Optional Flags:
+--alpha (hyperparam for pruning)
+--beta (hyperparam for pruning)
+--ec2 (whether to run on EC2 instances)
 */
 
 /* The following code is run when testCrawler.js is run directly */
