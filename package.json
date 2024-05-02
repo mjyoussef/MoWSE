@@ -23,6 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-ec2": "^3.567.0",
     "@pinecone-database/pinecone": "^2.2.0",
     "aws-sdk": "^2.1610.0",
     "axios": "^1.6.8",
