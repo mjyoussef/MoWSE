@@ -7,7 +7,6 @@ serviceName: the name of the service
 callback: an optional callback
 */
 const put = (context, service, serviceName, callback) => {
-  callback = callback || function(e, v) {};
   global.distribution[context.gid][serviceName] = service;
   global.distribution.local[serviceName] = service;
 
@@ -16,15 +15,7 @@ const put = (context, service, serviceName, callback) => {
   global.distribution[context.gid].comm.send(message, remote, callback);
 };
 
-/* Gets a service from every node in the group.
-
-PARAMETERS:
-context: stores the group ID
-serviceName: the name of the service
-callback: an optional callback
-*/
 const get = (context, serviceName, callback) => {
-  callback = callback || function(e, v) {};
   const message = [serviceName];
   const remote = {service: 'routes', method: 'get'};
   global.distribution[context.gid].comm.send(message, remote, callback);

@@ -1,11 +1,7 @@
 const comm = require('./comm');
 const status = require('./status');
 const groups = require('./groups');
-const mem = require('./mem');
-const store = require('./store');
-const mr = require('./mr');
-const vecStore = require('./vecStore.js');
-const index = require('./index');
+const gossip = require('./gossip');
 
 const routesStore = new Map();
 const routes = {};

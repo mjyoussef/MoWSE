@@ -76,16 +76,13 @@ function getID(_0x312bf3) {
         }, _0x328c97 = crypto[_0x3717c8(0x16e)](_0x513b87[_0x3717c8(0x16d)]);
     return _0x328c97['update'](JSON['stringify'](_0x312bf3)), _0x328c97[_0x3717c8(0x157)](_0x513b87['AFiLU']);
 }
-function getNID(_0x4d29e8) {
-    const _0x5db5be = _0x3490, _0x1cc91a = {
-            'gZPdj': function (_0x273229, _0xde1d1b) {
-                return _0x273229(_0xde1d1b);
-            }
-        };
-    return _0x4d29e8 = {
-        'ip': _0x4d29e8['ip'],
-        'port': _0x4d29e8[_0x5db5be(0x16c)]
-    }, _0x1cc91a[_0x5db5be(0x159)](getID, _0x4d29e8);
+
+// The NID is the SHA256 hash of the JSON representation of the node
+function getNID(node) {
+  const hash = crypto.createHash('sha256');
+  hash.update(serialization.serialize(node));
+  const x = hash.digest('hex');
+  return x;
 }
 function getSID(_0xdbb1bb) {
     const _0x2c826a = _0x3490;

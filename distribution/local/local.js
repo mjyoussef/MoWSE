@@ -44,7 +44,10 @@ module.exports = {
   groups: groups,
   mem: mem,
   store: store,
+<<<<<<< HEAD
   mr: mr,
   vecStore: vecStore,
   index: index,
+=======
+>>>>>>> origin
 };

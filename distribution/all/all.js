@@ -42,5 +42,4 @@ module.exports = {
   mem: mem,
   store: store,
   mr: mr,
-  vecStore: vecStore,
 };

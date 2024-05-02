@@ -7,15 +7,9 @@ rem: service and method to invoke
 callback: an optional callback
 */
 const send = (context, message, rem, callback) => {
-  callback = callback || function(e, v) {};
   const local = global.distribution.local;
 
   local.groups.get(context.gid, (e, v) => {
-    if (e) {
-      callback(new Error('all.comm.send: failed to get nodes in group'), undefined);
-      return;
-    }
-    
     const allNodes = v;
     const nodesToErrors = {};
     const nodesToValues = {};

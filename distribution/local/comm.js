@@ -1,3 +1,6 @@
+const http = require('http');
+const serialization = require('../util/serialization');
+
 const comm = {};
 
 /* Requests a service/method invocation on a node.
@@ -44,7 +47,7 @@ comm.send = (message, remote, cb) => {
     path: `/${remoteService}/${remoteMethod}`,
   };
 
-  const req = global.distribution.http.request(options, (res) => {
+  const req = http.request(options, (res) => {
     let responseData = '';
 
     if (res.statusCode >= 400) {
