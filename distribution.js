@@ -87,7 +87,8 @@ global.distribution.mrTemplate = require("./distribution/all/mr.js");
 global.distribution.vecStoreTemplate = require("./distribution/all/vecStore.js");
 
 // access token (store in a Secrets Manager in the future)
-global.distribution.accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJhNjI5ODVhMjRkNGMxZmZlYzVjYTZhNjZmZDkwZWJhYSIsImp0aSI6IjczMTAzYmFlM2JmZDJlOTczODc0OTNhZmVmZDRjMGRjZjlkN2E4MjFjNTRjYThkNGEwYTIzZTY1ODllOGFhYTU3ZTM3MzYzNDYxNzY4MmYwIiwiaWF0IjoxNzE0MTAwMzgzLjYxMDYyNCwibmJmIjoxNzE0MTAwMzgzLjYxMDYyOCwiZXhwIjozMzI3MTAwOTE4My42MDkwNiwic3ViIjoiNzU1MTY3MDkiLCJpc3MiOiJodHRwczovL21ldGEud2lraW1lZGlhLm9yZyIsInJhdGVsaW1pdCI6eyJyZXF1ZXN0c19wZXJfdW5pdCI6NTAwMCwidW5pdCI6IkhPVVIifSwic2NvcGVzIjpbImJhc2ljIl19.hAVb14lkul0BW8a8kLh6ZqUyk2kAo9veyTFOxmWQq0D8xYwyhx0of3ZpqFdt-EuXY0x34hHYydU84k-1dmEEB0e2IWhQVc65oi5CCwSBpL9oa3_9KQTuW7ubaR8AXC4yIrnGqrPcjhdQPwUwZkG8R3jdwgDhgRF5uyDEdgKfH35gHMRcryiaITH9PrbwWVm1AEaaAWYu3EftrBlYfxjWC19UwmSv0F8KSDY2uAT4o6QlyE-Re8WEbk6nbs1aW13A3U6eykyeeWFQoS4PsJX9DRvD9UvpYxirsedMrD0H5eHoeCPiO9lfZjdfpC0gx_fgbkM_ZN7_D1t7YD9O67U4NkyHnjogfFivQx29QCDBhmt-m4aGKsWx3Axky3XbdjftcBVhQUgpeXuokI71egBZfjXYQnZy48biyTYlymaGa8tBESD2OMn_BydnTvzadbkdEe_t6IIWNm_AMv9btxIGpnVsjZ3FwcnXy-fd5gzBr2C-Dajm5lz2GtZ-uMmvi2PIJSV7Gw5yKVgrr5x0ghs0b54_xC2VMvV_V16PjQK0KTe_mlc1FfyhM7amjkZh1FHCbXX03IMgtGavUBhC3CDC5GzKjOP2A49caTUHm4V6X9DMinG6kv1YxeVHfy5WEgAQl2QbTRHxq_XeOIJTT_vY8s9Bbjga4CYV4NqQLtjS5aU";
+global.distribution.accessToken =
+  "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJhNjI5ODVhMjRkNGMxZmZlYzVjYTZhNjZmZDkwZWJhYSIsImp0aSI6IjczMTAzYmFlM2JmZDJlOTczODc0OTNhZmVmZDRjMGRjZjlkN2E4MjFjNTRjYThkNGEwYTIzZTY1ODllOGFhYTU3ZTM3MzYzNDYxNzY4MmYwIiwiaWF0IjoxNzE0MTAwMzgzLjYxMDYyNCwibmJmIjoxNzE0MTAwMzgzLjYxMDYyOCwiZXhwIjozMzI3MTAwOTE4My42MDkwNiwic3ViIjoiNzU1MTY3MDkiLCJpc3MiOiJodHRwczovL21ldGEud2lraW1lZGlhLm9yZyIsInJhdGVsaW1pdCI6eyJyZXF1ZXN0c19wZXJfdW5pdCI6NTAwMCwidW5pdCI6IkhPVVIifSwic2NvcGVzIjpbImJhc2ljIl19.hAVb14lkul0BW8a8kLh6ZqUyk2kAo9veyTFOxmWQq0D8xYwyhx0of3ZpqFdt-EuXY0x34hHYydU84k-1dmEEB0e2IWhQVc65oi5CCwSBpL9oa3_9KQTuW7ubaR8AXC4yIrnGqrPcjhdQPwUwZkG8R3jdwgDhgRF5uyDEdgKfH35gHMRcryiaITH9PrbwWVm1AEaaAWYu3EftrBlYfxjWC19UwmSv0F8KSDY2uAT4o6QlyE-Re8WEbk6nbs1aW13A3U6eykyeeWFQoS4PsJX9DRvD9UvpYxirsedMrD0H5eHoeCPiO9lfZjdfpC0gx_fgbkM_ZN7_D1t7YD9O67U4NkyHnjogfFivQx29QCDBhmt-m4aGKsWx3Axky3XbdjftcBVhQUgpeXuokI71egBZfjXYQnZy48biyTYlymaGa8tBESD2OMn_BydnTvzadbkdEe_t6IIWNm_AMv9btxIGpnVsjZ3FwcnXy-fd5gzBr2C-Dajm5lz2GtZ-uMmvi2PIJSV7Gw5yKVgrr5x0ghs0b54_xC2VMvV_V16PjQK0KTe_mlc1FfyhM7amjkZh1FHCbXX03IMgtGavUBhC3CDC5GzKjOP2A49caTUHm4V6X9DMinG6kv1YxeVHfy5WEgAQl2QbTRHxq_XeOIJTT_vY8s9Bbjga4CYV4NqQLtjS5aU";
 
 module.exports = global.distribution;
 
@@ -114,4 +115,13 @@ global.distribution.util.loadGloVeEmbeddings(folderPath, (e, v) => {
 /* The following code is run when distribution.js is run directly */
 if (require.main === module) {
   distribution.node.start(global.nodeConfig.onStart);
+
+  // const inputs = [
+  //   ["hello", "there", "this", "is", 0.2],
+  //   ["this", "is", "another", "test", 0.4],
+  //   ["hello", "again", "missspe2342lled", 0.4],
+  // ];
+
+  // out = global.distribution.local.index.embed(inputs, (e, v) => {}, true);
+  // console.log(out);
 }

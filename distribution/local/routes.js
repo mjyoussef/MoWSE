@@ -1,8 +1,11 @@
-const comm = require('./comm');
-const status = require('./status');
-const groups = require('./groups');
-const gossip = require('./gossip');
-
+const comm = require("./comm");
+const status = require("./status");
+const groups = require("./groups");
+const mem = require("./mem");
+const store = require("./store");
+const mr = require("./mr");
+const vecStore = require("./vecStore.js");
+const index = require("./index");
 const routesStore = new Map();
 const routes = {};
 
@@ -27,9 +30,9 @@ routes.get = (name, cb) => {
     // cb(new Error("Service not found in routes"), null);
     const globalLookup = global.toLocal.get(name);
     if (globalLookup) {
-      cb(null, {call: globalLookup});
+      cb(null, { call: globalLookup });
     } else {
-      cb(new Error('Service not found in routes'));
+      cb(new Error("Service not found in routes"));
     }
   }
 };
