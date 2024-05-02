@@ -4,6 +4,7 @@ const fs = require("fs");
 const AWS = require("aws-sdk");
 
 const {
+  EC2Client,
   RunInstancesCommand,
   DescribeInstancesCommand,
 } = require("@aws-sdk/client-ec2");
@@ -106,8 +107,10 @@ if (require.main === module) {
     cb(undefined, true);
   };
 
-  AWS.config.update({ region: "us-east-2" });
-  const ec2 = new AWS.EC2();
+  // AWS.config.update({ region: "us-east-2" });
+  // const ec2 = new AWS.EC2();
+
+  const ec2 = new EC2Client({ region: "your-region" });
 
   async function waitForInstancesToBeRunning(instanceIds) {
     try {
