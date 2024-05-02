@@ -147,7 +147,9 @@ if (require.main === module) {
   #cloud-boothook
   #!/bin/bash
   sudo yum install -y git
+  mkdir break1
   git clone -b deployment https://github.com/mjyoussef/mowse.git
+  mkdir break2
   sudo yum install nodejs -y
   cd mowse
   npm install

@@ -65,7 +65,7 @@ const vecStore = (config) => {
     k: k for top-k search (defaults to 5)
     */
     query: (key, cb, k=5) => {
-      console.log('querying');
+      // console.log('querying');
       const embedded_query = global.distribution.local.index.embed(key);
       global.distribution.local.groups.get(gid, (e, nodes) => {
         if (e) {
