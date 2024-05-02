@@ -129,6 +129,7 @@ if (require.main === module) {
 
         if (allRunning) {
           console.log("All instances are running");
+          await new Promise((resolve) => setTimeout(resolve, 10000));
           break;
         } else {
           console.log("Waiting for instances to be running...");
@@ -142,6 +143,17 @@ if (require.main === module) {
     }
   }
 
+  const startScript = `
+  #!/bin/bash
+  sudo yum install -y git
+  git clone -b deployment https://github.com/mjyoussef/mowse.git
+  sudo yum install nodejs -y
+  cd mowse
+  npm install
+
+  node distribution.js --ip "0.0.0.0" --port 7070
+  `;
+
   const startNodesDeployment = async (cb) => {
     const instanceParams = {
       ImageId: "ami-0ddda618e961f2270",
@@ -150,18 +162,7 @@ if (require.main === module) {
       SecurityGroupIds: ["sg-0d00be20140229e28"],
       MinCount: 1,
       MaxCount: args.numNodes,
-      UserData: Buffer.from(
-        `
-      #!/bin/bash
-      sudo yum install -y git
-      git clone -b deployment https://github.com/mjyoussef/mowse.git
-      sudo yum install nodejs -y
-      cd mowse
-      npm install
-
-      node distribution.js --ip "0.0.0.0" --port 7070
-      `
-      ).toString("base64"),
+      UserData: Buffer.from(startScript).toString("base64"),
     };
 
     try {
