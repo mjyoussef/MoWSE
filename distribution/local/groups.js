@@ -1,5 +1,5 @@
 const id = global.distribution.util.id;
-const config = require('./config.js');
+const config = require("./config.js");
 
 const groups = {};
 
@@ -13,29 +13,31 @@ groups.nodeGroups = {
   },
 };
 
-/* Gets the nodes in a group.
-
-group: the group ID
-cb: an optional callback
-*/
-groups.get = (group, cb) => {
+/**
+ * Gets the nodes in a group.
+ *
+ * @param {string} groupName - name of the group
+ * @param {Function} cb - optional callback that accepts error, value
+ */
+groups.get = (groupName, cb) => {
   const callback = cb || (() => {});
 
-  if (group in groups.nodeGroups) {
-    callback(null, groups.nodeGroups[group]);
+  if (groupName in groups.nodeGroups) {
+    callback(null, groups.nodeGroups[groupName]);
   } else {
-    callback(new Error(`group ${group} not found`));
+    callback(new Error(`group ${groupName} not found`));
   }
 };
 
-/* Puts a list of nodes in a group.
-
-groupName: the group ID
-nodes: the list of nodes to add
-cb: an optional callback
-*/
+/**
+ * Puts a list of nodes in a group.
+ *
+ * @param {string} groupName - name of the group
+ * @param {Object[]} nodes - the list of nodes to add
+ * @param {Function} cb - optional callback that accepts error, value
+ */
 groups.put = (groupName, nodes, cb) => {
-  const callback = cb || function(e, v) {};
+  const callback = cb || function (e, v) {};
   groups.nodeGroups[groupName] = nodes;
 
   const context = {
@@ -56,14 +58,15 @@ groups.put = (groupName, nodes, cb) => {
   callback(null, nodes);
 };
 
-/* Adds a node to the group.
-
-groupName: the group ID
-node: the node to add
-cb: an optional callback
-*/
+/**
+ * Adds a node to a group.
+ *
+ * @param {string} groupName - name of the group
+ * @param {Object} node - the node to add
+ * @param {Function} cb - optional callback that accepts error, value
+ */
 groups.add = (groupName, node, cb) => {
-  const callback = cb || function(e, v) {};
+  const callback = cb || function (e, v) {};
 
   const nodeSID = id.getSID(node);
   if (!(groupName in groups.nodeGroups)) {
@@ -77,14 +80,15 @@ groups.add = (groupName, node, cb) => {
   callback(null, node);
 };
 
-/* A node to remove from the group.
-
-groupName: the group ID
-nodeId: th id of the node
-cb: an optional callback
-*/
+/**
+ * Removes a node from a group.
+ *
+ * @param {string} groupName - name of the group
+ * @param {string} nodeId - the node's id
+ * @param {Function} cb - optional callback that accepts error, value
+ */
 groups.rem = (groupName, nodeId, cb) => {
-  const callback = cb || function(e, v) {};
+  const callback = cb || function (e, v) {};
   if (
     !(groupName in groups.nodeGroups) ||
     !(nodeId in groups.nodeGroups[groupName])
@@ -99,13 +103,14 @@ groups.rem = (groupName, nodeId, cb) => {
   callback(null, nodeToDelete);
 };
 
-/* Deletes a group.
-
-groupName: the group ID
-cb: an optional callback
-*/
+/**
+ * Deletes a group.
+ *
+ * @param {string} groupName - name of the group
+ * @param {Function} cb - optional callback that accepts error, value
+ */
 groups.del = (groupName, cb) => {
-  const callback = cb || function(e, v) {};
+  const callback = cb || function (e, v) {};
   if (!(groupName in groups.nodeGroups)) {
     callback(new Error(`group ${groupName} not found`));
     return;
