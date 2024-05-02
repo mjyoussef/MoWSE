@@ -110,7 +110,7 @@ if (require.main === module) {
   // AWS.config.update({ region: "us-east-2" });
   // const ec2 = new AWS.EC2();
 
-  const ec2 = new EC2Client({ region: "your-region" });
+  const ec2 = new EC2Client({ region: "us-east-2" });
 
   async function waitForInstancesToBeRunning(instanceIds) {
     try {
