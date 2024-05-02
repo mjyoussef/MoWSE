@@ -165,6 +165,7 @@ if (require.main === module) {
       const data = await ec2.send(new RunInstancesCommand(instanceParams));
 
       const instanceIds = data.Instances.map((instance) => instance.InstanceId);
+      console.log("INSTANCE IDS", instanceIds);
 
       // Wait for instances to be running
       await waitForInstancesToBeRunning(instanceIds);
@@ -188,6 +189,8 @@ if (require.main === module) {
           ip: instance.PublicIpAddress,
           port: "7070",
         }));
+
+        console.log("INSTANCE DETAILS", instanceDetails);
 
         instanceDetails.forEach((node) => {
           let sid = distribution.util.id.getSID(node);
