@@ -3,6 +3,11 @@ const crawler = require("../crawler.js");
 const fs = require("fs");
 const AWS = require("aws-sdk");
 
+const {
+  RunInstancesCommand,
+  DescribeInstancesCommand,
+} = require("@aws-sdk/client-ec2");
+
 /*
 EXAMPLE USAGE:
 
@@ -38,15 +43,15 @@ if (require.main === module) {
   }
 
   // if deploying on an EC2 cluster
-  if (args.ec2) {
-    if (!args.securityGroup) {
-      console.error("must provide a security group if deploying from AWS");
-      return;
-    }
-    if (!args.instanceType) {
-      console.error();
-    }
-  }
+  // if (args.ec2) {
+  //   if (!args.securityGroup) {
+  //     console.error("must provide a security group if deploying from AWS");
+  //     return;
+  //   }
+  //   if (!args.instanceType) {
+  //     console.error();
+  //   }
+  // }
 
   let alpha = 0.001;
   let beta = 500;
@@ -101,15 +106,45 @@ if (require.main === module) {
     cb(undefined, true);
   };
 
-  const startNodesDeployment = async (cb) => {
-    AWS.config.update({ region: "us-east-2" });
-    const ec2 = new AWS.EC2();
+  AWS.config.update({ region: "us-east-2" });
+  const ec2 = new AWS.EC2();
 
+  async function waitForInstancesToBeRunning(instanceIds) {
+    try {
+      while (true) {
+        // Describe instances
+        const data = await ec2.send(
+          new DescribeInstancesCommand({ InstanceIds: instanceIds })
+        );
+
+        // Check if all instances are in the "running" state
+        const allRunning = data.Reservations.every((reservation) => {
+          return reservation.Instances.every(
+            (instance) => instance.State.Name === "running"
+          );
+        });
+
+        if (allRunning) {
+          console.log("All instances are running");
+          break;
+        } else {
+          console.log("Waiting for instances to be running...");
+          // Wait for a few seconds before checking again
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      throw error;
+    }
+  }
+
+  const startNodesDeployment = async (cb) => {
     const instanceParams = {
       ImageId: "ami-0ddda618e961f2270",
       InstanceType: "t2.micro",
       KeyName: "node-1-keypair",
-      SecurityGroupIds: ["sg-05f71596221bd4e82"],
+      SecurityGroupIds: ["sg-0d00be20140229e28"],
       MinCount: 1,
       MaxCount: args.numNodes,
       UserData: Buffer.from(
@@ -124,19 +159,16 @@ if (require.main === module) {
       node distribution.js --ip "0.0.0.0" --port 7070
       `
       ).toString("base64"),
-      SecurityGroupIds: ["sg-0d00be20140229e28"],
     };
 
-    ec2.runInstances(instanceParams, (error, data) => {
-      if (error) {
-        cb(new Error(error.message), undefined);
-        return;
-      }
+    try {
+      const data = await ec2.send(new RunInstancesCommand(instanceParams));
 
       const instanceIds = data.Instances.map((instance) => instance.InstanceId);
 
-      // get the IP and ports
-      // and add them to the IP and ports
+      // Wait for instances to be running
+      await waitForInstancesToBeRunning(instanceIds);
+
       const describeParams = {
         InstanceIds: instanceIds,
       };
@@ -151,26 +183,62 @@ if (require.main === module) {
         const instances = describeData.Reservations.flatMap(
           (reservation) => reservation.Instances
         );
+
         const instanceDetails = instances.map((instance) => ({
           ip: instance.PublicIpAddress,
-          port: "7070", // Replace with your logic to get the port
+          port: "7070",
         }));
-
-        // send request to each node to call distribution.js with ip and port
 
         instanceDetails.forEach((node) => {
           let sid = distribution.util.id.getSID(node);
           crawlGroup[sid] = node;
-
-          // how to spawn the node? we don't use status.spawn, gotta have each of them spin up themselves?
-          // we gotta run a script maybe that starts it and does a callback to the ip of the current node.
-          // The node is already configured to have the PublicIpAddress
         });
 
-        // Callback with instanceDetails or perform further actions
         cb(undefined, true);
       });
-    });
+    } catch (error) {
+      console.error("error launching instances:", error);
+      cb(error, false);
+    }
+
+    // ec2.runInstances(instanceParams, (error, data) => {
+    //   if (error) {
+    //     cb(new Error(error.message), undefined);
+    //     return;
+    //   }
+
+    //   const instanceIds = data.Instances.map((instance) => instance.InstanceId);
+
+    //   // get the IP and ports
+    //   // and add them to the IP and ports
+    //   const describeParams = {
+    //     InstanceIds: instanceIds,
+    //   };
+
+    //   ec2.describeInstances(describeParams, (err, describeData) => {
+    //     if (err) {
+    //       cb(new Error(err.message), undefined);
+    //       return;
+    //     }
+
+    //     // Extract IP addresses and ports
+    //     const instances = describeData.Reservations.flatMap(
+    //       (reservation) => reservation.Instances
+    //     );
+
+    //     const instanceDetails = instances.map((instance) => ({
+    //       ip: instance.PublicIpAddress,
+    //       port: "7070",
+    //     }));
+
+    //     instanceDetails.forEach((node) => {
+    //       let sid = distribution.util.id.getSID(node);
+    //       crawlGroup[sid] = node;
+    //     });
+
+    //     cb(undefined, true);
+    //   });
+    // });
   };
 
   distribution.node.start((server) => {
@@ -181,14 +249,21 @@ if (require.main === module) {
 
     callback((e, v) => {
       // add the nodes to the crawl group
+      console.log(e, v);
+      console.log(crawlGroup);
+
+      if (e) {
+        console.error("ERROR:", e);
+        return;
+      }
       groupsTemplate({ gid: "crawl" }).put("crawl", crawlGroup, (e, v) => {
-        if (Object.keys(e).length > 0) {
-          console.error("Failed to start at least one node.");
+        if (args.test) {
+          console.log("crawl group", e, v);
           return;
         }
 
-        if (args.test) {
-          console.log("crawl group", v);
+        if (Object.keys(e).length > 0) {
+          console.error("Failed to start at least one node.");
           return;
         }
 
