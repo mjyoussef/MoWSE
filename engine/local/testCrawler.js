@@ -2,7 +2,6 @@ const args = require("yargs").argv;
 const crawler = require("../crawler.js");
 const fs = require("fs");
 const AWS = require("aws-sdk");
-
 const {
   EC2Client,
   RunInstancesCommand,
@@ -12,9 +11,13 @@ const {
 /*
 EXAMPLE USAGE:
 
-`./testCrawler.js --maxIters 4 --numNodes 3`
+`./testCrawler.js --maxIters 4 --numNodes 3` will run the crawler
+using 4 MapReduce iterations and 3 nodes.
 
-runs the crawler using at most 4 MapReduce iterations and 3 nodes.
+Optional Flags:
+--alpha (hyperparam for pruning)
+--beta (hyperparam for pruning)
+--ec2 (whether to run on EC2 instances)
 */
 
 /* The following code is run when testCrawler.js is run directly */
@@ -43,23 +46,37 @@ if (require.main === module) {
     return;
   }
 
-  // if deploying on an EC2 cluster
-  // if (args.ec2) {
-  //   if (!args.securityGroup) {
-  //     console.error("must provide a security group if deploying from AWS");
-  //     return;
-  //   }
-  //   if (!args.instanceType) {
-  //     console.error();
-  //   }
-  // }
+  // deploying
+  if (args.ec2) {
+    if (!args.securityGroupID) {
+      console.error("must provide a security group when deploying.");
+      return;
+    }
 
+    if (!args.accessKeyID) {
+      console.error("must provide access key ID when deploying.");
+      return;
+    }
+
+    if (!args.accessKeySecret) {
+      console.error("must provide access key secret when deploying.");
+      return;
+    }
+
+    if (!args.region) {
+      console.error("must specify region when deploying.");
+      return;
+    }
+  }
+
+  // optional params
   let alpha = 0.001;
   let beta = 500;
 
   if (args.alpha) {
     alpha = args.alpha;
   }
+
   if (args.beta) {
     beta = args.beta;
   }
@@ -70,10 +87,12 @@ if (require.main === module) {
   */
 
   // setup the coordinator
-  const ip = "127.0.0.1";
+  let ip = "127.0.0.1";
   let basePort = 7110;
-  global.nodeConfig = { ip: ip, port: basePort };
-  const distribution = require("../../distribution");
+  if (!args.ec2) {
+    global.nodeConfig = { ip: ip, port: basePort };
+    require("../../distribution");
+  }
 
   // crawler group
   const crawlGroup = {};
@@ -107,110 +126,49 @@ if (require.main === module) {
     cb(undefined, true);
   };
 
-  // AWS.config.update({ region: "us-east-2" });
-  // const ec2 = new AWS.EC2();
+  const startDeployedNodes = async (cb) => {
+    // create the client
+    const ec2 = new EC2Client({ region: args.region });
 
-  const ec2 = new EC2Client({ region: "us-east-2" });
-
-  async function waitForInstancesToBeRunning(instanceIds) {
-    try {
-      while (true) {
-        // Describe instances
-        const data = await ec2.send(
-          new DescribeInstancesCommand({ InstanceIds: instanceIds })
-        );
-
-        // Check if all instances are in the "running" state
-        const allRunning = data.Reservations.every((reservation) => {
-          return reservation.Instances.every(
-            (instance) => instance.State.Name === "running"
-          );
-        });
-
-        if (allRunning) {
-          console.log("All instances are running");
-          await new Promise((resolve) => setTimeout(resolve, 10000));
-          break;
-        } else {
-          console.log("Waiting for instances to be running...");
-          // Wait for a few seconds before checking again
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-        }
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      throw error;
-    }
-  }
-
-  const startScript = `
-  #cloud-boothook
-  #!/bin/bash
-  sudo yum install -y git
-  mkdir break1
-  git clone -b deployment https://github.com/mjyoussef/mowse.git
-  mkdir break2
-  sudo yum install nodejs -y
-  cd mowse
-  npm install
-  node distribution.js --ip "0.0.0.0" --port 7070
-  `;
-
-  const startNodesDeployment = async (cb) => {
-    const instanceParams = {
-      ImageId: "ami-0ddda618e961f2270",
-      InstanceType: "t2.micro",
-      KeyName: "node-1-keypair",
-      SecurityGroupIds: ["sg-0d00be20140229e28"],
-      MinCount: 1,
-      MaxCount: args.numNodes,
-      UserData: Buffer.from(startScript).toString("base64"),
+    const params = {
+      Filters: [
+        {
+          Name: "instance.group-id",
+          Values: [args.securityGroup],
+        },
+      ],
     };
 
     try {
-      const data = await ec2.send(new RunInstancesCommand(instanceParams));
+      const data = await ec2.send(new DescribeInstancesCommand(params));
 
-      const instanceIds = data.Instances.map((instance) => instance.InstanceId);
-      console.log("INSTANCE IDS", instanceIds);
+      data.Reservations.forEach((reservation) => {
+        reservation.Instances.forEach((instance) => {
+          let node = {
+            ip: instance.PublicIpAddress,
+            port: global.nodeConfig.port,
+          };
+          let sid = distribution.util.id.getSID(node);
 
-      // Wait for instances to be running
-      await waitForInstancesToBeRunning(instanceIds);
-
-      const describeData = await ec2.send(
-        new DescribeInstancesCommand({ InstanceIds: instanceIds })
-      );
-
-      // Extract IP addresses and ports
-      const instances = describeData.Reservations.flatMap(
-        (reservation) => reservation.Instances
-      );
-
-      const instanceDetails = instances.map((instance) => ({
-        ip: instance.PublicIpAddress,
-        port: "7070",
-      }));
-
-      console.log("INSTANCE DETAILS", instanceDetails);
-
-      instanceDetails.forEach((node) => {
-        let sid = distribution.util.id.getSID(node);
-        crawlGroup[sid] = node;
+          // add to the crawl group
+          crawlGroup[sid] = node;
+        });
       });
 
       cb(undefined, true);
     } catch (error) {
-      console.error("error launching instances:", error);
-      cb(error, false);
+      cb(new Error(error.message), undefined);
+      return;
     }
   };
 
-  distribution.node.start((server) => {
-    let callback = startNodes;
+  global.distribution.node.start((server) => {
+    let startFn = startNodes;
     if (args.ec2) {
-      callback = startNodesDeployment;
+      startFn = startDeployedNodes;
     }
 
-    callback((e, v) => {
+    startNodes((e, v) => {
       // add the nodes to the crawl group
       console.log(e, v);
       console.log(crawlGroup);
@@ -220,11 +178,6 @@ if (require.main === module) {
         return;
       }
       groupsTemplate({ gid: "crawl" }).put("crawl", crawlGroup, (e, v) => {
-        if (args.test) {
-          console.log("crawl group", e, v);
-          return;
-        }
-
         if (Object.keys(e).length > 0) {
           console.error("Failed to start at least one node.");
           return;
@@ -248,7 +201,7 @@ if (require.main === module) {
               results.nodes = args.numNodes;
               results.iters = args.maxIters;
               const resultsStr = JSON.stringify(results, null, 2);
-              fs.appendFileSync("./results.log", resultsStr);
+              fs.writeFileSync("./results.json", resultsStr);
               console.log("Finished crawling!");
             } catch (error) {
               console.error("Failed to write results to ./outputs.json");

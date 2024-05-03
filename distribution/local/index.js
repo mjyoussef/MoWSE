@@ -1,83 +1,105 @@
 const index = {};
 
-/* Computes a Mean of Words (MoW) embedding.
-
-PARAMETERS:
-inputs: a list of words
-callback: an optional callback
-tfidf: whether to store/use tfidf values
-*/
+/**
+ * Computes an embedding for a list of list of words, where each group
+ * has a weight assigned to it.
+ *
+ * @param {Array[]} inputs - list of list of words (each group has a weight at the end)
+ * @param {Function} callback - optional callback that accepts an error, value
+ * @param {boolean} [tfidf=false] - whether to weight words using tf-idf scores
+ * @return {number[]} - a vector embedding
+ */
 function embed(inputs, callback, tfidf = false) {
+  // GloVe embeddings
   let model = global.distribution.embeddings;
-  // console.log(doc);
-  let stopwords = global.distribution.stopwords;
-  words = inputs.filter((word) => !stopwords.includes(word)); // includes is linear time, can we speed this up using a set instead?
-  if (tfidf) {
-    global.distribution.documents += 1;
-    let sum = null;
-    let total = 0;
-    vectors = {};
-    for (word of words) {
-      if (word in model) {
-        if (word in vectors) {
-          vectors[word] = { vec: model[word], count: vectors[word].count + 1 };
-        } else {
-          vectors[word] = { vec: model[word], count: 1 };
-        }
-        total += 1;
-      }
-    }
-    for (const [word, info] of Object.entries(vectors)) {
-      // idf is only accurate if run after crawling it seems. We can maintain the global values, but calculate the weight in the reduce phase of the crawler
-      global.distribution.tfidf[word] += 1;
-      tf = info.count / total;
-      idf = Math.log(
-        global.distribution.documents / global.distribution.tfidf[word]
-      ); // idf must be computed after all documents, otherwise we will have super high idf for some documents
-      weight = tf * idf;
-      if (sum === null) {
-        sum = info.vec.map((x) => x * weight);
-      } else {
-        for (let i = 0; i < sum.length; i++) {
-          sum[i] += info.vec[i] * weight;
-          sum[i] = sum[i];
-        }
-      }
-    }
-    if (sum !== null) {
-      sum = Array.from({ length: 50 }, () => 0.0);
-    }
-    if (callback) {
-      callback(null, sum);
-    }
-    return sum;
-  } else {
-    let sum = null;
-    for (word of words) {
-      if (word in model) {
-        if (sum === null) {
-          sum = model[word];
-        } else {
-          for (let i = 0; i < sum.length; i++) {
-            sum[i] += model[word][i];
-          }
-        }
-      }
-    }
-    if (sum !== null) {
-      const length = words.length;
-      for (let i = 0; i < sum.length; i++) {
-        sum[i] /= length;
-        sum[i] = sum[i]; // ?
-      }
-    } else {
-      sum = Array.from({ length: 50 }, () => 0.0);
-    }
-    if (callback) {
-      callback(null, sum);
-    }
-    return sum;
+
+  // we'll need this for filtering out stop words later
+  let stopWords = global.distribution.stopwords;
+
+  if (!global.tfidf) {
+    // for computing IDF
+    global.tfidf = {
+      numDocuments: 0,
+      numDocumentsContainingWord: {},
+    };
   }
+
+  // update the number of documents in this node
+  global.tfidf.numDocuments += 1;
+
+  // count the frequency w/ which each word occurs in the document
+  const wordFrequencies = {};
+  let documentSize = 0;
+  inputs.forEach((group) => {
+    // last element is the weighting for the group!
+    for (let i = 0; i < group.length - 1; i++) {
+      const word = group[i];
+      // if the word is a stop word or doesn't have an embedding, skip it
+      if (stopWords.has(word) || !model.hasOwnProperty(word)) {
+        continue;
+      }
+
+      // update the frequency of this word in the document
+      const freq = wordFrequencies[word] || 0;
+      wordFrequencies[word] = freq + 1;
+
+      // update the number of words in the document
+      documentSize += 1;
+
+      // update the number of documents containing the word (used for IDF scores)
+      if (tfidf) {
+        if (wordFrequencies[word] === 1) {
+          if (!global.tfidf.numDocumentsContainingWord[word]) {
+            global.tfidf.numDocumentsContainingWord[word] = 0;
+          }
+          global.tfidf.numDocumentsContainingWord[word] += 1;
+        }
+      }
+    }
+  });
+
+  // Now, we need to generate the unnormalized weights for each word
+  const unnormalizedWeights = {};
+  let weightSum = 0;
+  inputs.forEach((group) => {
+    let groupWeight = group[group.length - 1];
+
+    group.forEach((word) => {
+      // make sure the word is a valid word
+      if (wordFrequencies.hasOwnProperty(word)) {
+        let tf = wordFrequencies[word] / documentSize;
+        let idf = 1;
+
+        if (tfidf) {
+          idf = Math.log(
+            global.tfidf.numDocuments /
+              (1 + global.tfidf.numDocumentsContainingWord[word])
+          );
+        }
+
+        unnormalizedWeights[word] = tf * idf * groupWeight;
+        weightSum += unnormalizedWeights[word];
+      }
+    });
+  });
+
+  // now, we need to normalize the weights for each word and compute the embedding
+  let sum = Array.from({ length: 50 }, () => 0.0);
+
+  for (let word of Object.keys(unnormalizedWeights)) {
+    const normalizedWeight = unnormalizedWeights[word] / weightSum;
+
+    const embedding = model[word];
+    for (let i = 0; i < embedding.length; i++) {
+      sum[i] += (normalizedWeight * embedding[i]) / documentSize;
+    }
+  }
+
+  if (callback) {
+    callback(undefined, sum);
+  }
+
+  return sum;
 }
 
 index.embed = embed;

@@ -3,12 +3,12 @@ const mr = function (config) {
   const hash = config.hash || "naiveHash";
 
   return {
-    /* Initiates a MapReduce computation given map and reduce functions.
-
-    PARAMETERS:
-    args: arguments for MapReduce (see below)
-    cb: an optional callback
-    */
+    /**
+     * MapReduce, using the current node as the coordinator.
+     *
+     * @param {Object} args - contains mrid, map/reduce functions, and optional inputs
+     * @param {Function} cb - an optional callback that accepts an error and value
+     */
     exec: (args, cb) => {
       /*
       args = {
@@ -18,7 +18,6 @@ const mr = function (config) {
         inputs: (optional); a list of key-val pairs to use
       }
       */
-
       cb = cb || function (e, v) {};
 
       global.distribution.local.groups.get(gid, async (e, nodes) => {

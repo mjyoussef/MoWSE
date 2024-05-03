@@ -61,13 +61,33 @@ const crawlMap = (title, metadata) => {
               return;
             }
 
-            // get the lowercased words
-            const words = text.match(/\b[\w']+\b/g);
-            const lowerCaseWords = words.map((word) => word.toLowerCase());
+            // Function to filter and lowercase words
+            const filterAndLowercaseWords = (text) => {
+              // Only English lowercase words and apostrophes
+              return text.toLowerCase().match(/\b[a-z']+\b/g) || [];
+            };
+
+            // Process title words
+            const titleWords = filterAndLowercaseWords(title);
+
+            // Split the text into sections
+            const sections = text.split("\n\n");
+            const introWords = filterAndLowercaseWords(sections[0]);
+            const otherSections = sections.slice(1).join(" ");
+            const remainingWords = filterAndLowercaseWords(otherSections);
 
             // embed the document
-            const embed = global.distribution.local.index.embed;
-            const embedding = embed(lowerCaseWords, (e, v) => {}, true);
+            inputs = [
+              [...titleWords, 0.34],
+              [...introWords, 0.528],
+              [...remainingWords, 0.132],
+            ];
+
+            const embedding = global.distribution.local.index.embed(
+              inputs,
+              (e, v) => {},
+              true
+            );
 
             const links = page.links
               ? page.links.map((link) => link.title)
@@ -85,23 +105,10 @@ const crawlMap = (title, metadata) => {
             //   embedding,
             //   { key: title, gid: gid },
             //   (e, v) => {
-            //     if (e) {x
-            //       reject(e);
-
-            //       return;
-            //     }
-            //     // get the links (titles)
-            //     const links = page.links
-            //       ? page.links.map((link) => link.title)
-            //       : [];
-
-            //     const filteredLinks = links.filter(
-            //       (title) => !/[^\w\s]/.test(title)
-            //     );
-
-            //     let obj = {};
-            //     obj[title] = filteredLinks;
-            //     console.log("Completed requested: ", title);
+            //     // if (e) {
+            //     //   resolve(obj);
+            //     //   return;
+            //     // }
             //     resolve(obj);
             //   }
             // );

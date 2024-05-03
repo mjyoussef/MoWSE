@@ -11,31 +11,31 @@ vecStore Local vecStore service                     put, query
 */
 
 /* Status Service */
-const status = require('./status');
+const status = require("./status");
 
 /* Groups Service */
-const groups = require('./groups');
+const groups = require("./groups");
 
 /* Mem Service*/
-const mem = require('./mem');
+const mem = require("./mem");
 
 /* Store Service */
-const store = require('./store');
+const store = require("./store");
 
 /* Routes Service */
-const routes = require('./routes');
+const routes = require("./routes");
 
 /* Comm Service */
-const comm = require('./comm');
+const comm = require("./comm");
 
 /* MapReduce service */
-const mr = require('./mr');
+const mr = require("./mr");
 
 /* vecStore service */
-const vecStore = require('./vecStore');
+const vecStore = require("./vecStore");
 
 /* index embedding service */
-const index = require('./index');
+const index = require("./index");
 
 module.exports = {
   status: status,
