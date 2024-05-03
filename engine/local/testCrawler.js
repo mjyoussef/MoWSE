@@ -201,7 +201,7 @@ if (require.main === module) {
               results.nodes = args.numNodes;
               results.iters = args.maxIters;
               const resultsStr = JSON.stringify(results, null, 2);
-              fs.writeFileSync("./results.json", resultsStr);
+              fs.appendFileSync("./results.log", resultsStr);
               console.log("Finished crawling!");
             } catch (error) {
               console.error("Failed to write results to ./outputs.json");

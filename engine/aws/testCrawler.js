@@ -8,7 +8,7 @@ EXAMPLE USAGE:
 
 `./testCrawler.js --maxIters 4 `
 
-runs the crawler using at most 4 MapReduce iterations and 3 nodes.
+runs the crawler using at most 4 MapReduce iterations
 */
 
 /* The following code is run when testCrawler.js is run directly */
@@ -59,8 +59,6 @@ if (require.main === module) {
     crawlGroup[distribution.util.id.getSID(node)] = node;
   });
 
-
-
   distribution.node.start((server) => {
     console.log(crawlGroup);
 
@@ -71,6 +69,7 @@ if (require.main === module) {
       }
 
       if (Object.keys(e).length > 0) {
+        console.error(e);
         console.error("Failed to start at least one node.");
         return;
       }

@@ -101,17 +101,17 @@ const crawlMap = (title, metadata) => {
             obj[title] = filteredLinks;
             resolve(obj);
 
-            // global.distribution.local.vecStore.put(
-            //   embedding,
-            //   { key: title, gid: gid },
-            //   (e, v) => {
-            //     // if (e) {
-            //     //   resolve(obj);
-            //     //   return;
-            //     // }
-            //     resolve(obj);
-            //   }
-            // );
+            global.distribution.local.vecStore.put(
+              embedding,
+              { key: title, gid: gid },
+              (e, v) => {
+                // if (e) {
+                //   resolve(obj);
+                //   return;
+                // }
+                resolve(obj);
+              }
+            );
           })
           .catch((error) => {
             reject(error);

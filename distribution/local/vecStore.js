@@ -41,29 +41,34 @@ async function init(callback) {
  * @param {Function} callback - an optional callback
  */
 async function put(key, value, callback) {
-  const local_db = await db.connect(`vecStoreData/${ip}:${port}/vectordb`);
-  names = await local_db.tableNames();
-  if (!names.includes("vecStore")) {
-    global.distribution.vecStore = await local_db.createTable(
-      "vecStore",
-      [
+  try {
+    const local_db = await db.connect(`vecStoreData/${ip}:${port}/vectordb`);
+    names = await local_db.tableNames();
+    if (!names.includes("vecStore")) {
+      global.distribution.vecStore = await local_db.createTable(
+        "vecStore",
+        [
+          {
+            vector: key,
+            url: value.key,
+          },
+        ],
+        { writeMode: db.WriteMode.Overwrite }
+      );
+      callback(null, "added");
+    } else {
+      // comment out when fully distributed
+      global.distribution.vecStore = await local_db.openTable("vecStore");
+      await global.distribution.vecStore.add([
         {
           vector: key,
           url: value.key,
         },
-      ],
-      { writeMode: db.WriteMode.Overwrite }
-    );
-    callback(null, "added");
-  } else {
-    // comment out when fully distributed
-    global.distribution.vecStore = await local_db.openTable("vecStore");
-    await global.distribution.vecStore.add([
-      {
-        vector: key,
-        url: value.key,
-      },
-    ]);
+      ]);
+      callback(null, "added");
+      return;
+    }
+  } catch (error) {
     callback(null, "added");
     return;
   }
