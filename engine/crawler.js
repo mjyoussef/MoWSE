@@ -1,6 +1,6 @@
 const fs = require("fs");
-const { performance } = require('perf_hooks');
-const _ = require('lodash');
+const { performance } = require("perf_hooks");
+const _ = require("lodash");
 
 /* Input key = title of page, input value = some metadata.
 `crawlMap` embeds the document, saves the embedding locally, and
@@ -126,16 +126,8 @@ const crawlReduce = (title, values) => {
 };
 
 /* Crawler */
-const crawl = async (
-  alpha,
-  beta,
-  gid,
-  titles,
-  maxIters,
-  logging,
-  cb,
-) => {
-  cb = cb || function(e, v) {};
+const crawl = async (alpha, beta, gid, titles, maxIters, logging, cb) => {
+  cb = cb || function (e, v) {};
 
   const start = performance.now();
 
@@ -161,18 +153,21 @@ const crawl = async (
           resolve([]);
           return;
         }
-        
-        /* Prune titles 
-        * If epsilon=len(titles)*alpha is greater than beta, use an epsilon-fraction
-        * of random titles. Otherwise, use beta randomly sampled titles.
-        */
+
+        /* Prune titles
+         * If epsilon=len(titles)*alpha is greater than beta, use an epsilon-fraction
+         * of random titles. Otherwise, use beta randomly sampled titles.
+         */
 
         // shuffle
         let unshuffledTitlesLst = [...titles];
         let titlesLst = _.shuffle(unshuffledTitlesLst);
 
         // prune
-        let spliceIdx = Math.min(titlesLst.length, Math.max(beta, Math.floor(titlesLst.length*alpha)));
+        let spliceIdx = Math.min(
+          titlesLst.length,
+          Math.max(beta, Math.floor(titlesLst.length * alpha))
+        );
         titlesLst = titlesLst.slice(0, spliceIdx);
 
         // create the MapReduce inputs
@@ -217,7 +212,10 @@ const crawl = async (
       let newTitles = await mrIterationPromise;
       newTitles.forEach((title) => uniqueTitles.add(title));
       if (logging) {
-        console.log("Total number of unique extracted URLs: ", uniqueTitles.size);
+        console.log(
+          "Total number of unique extracted URLs: ",
+          uniqueTitles.size
+        );
       }
       titles = newTitles;
 
@@ -238,6 +236,7 @@ const crawl = async (
   cb(undefined, {
     numPages: uniqueTitles.size,
     time: (end - start) / 1000,
+    throughput: uniqueTitles.size / ((end - start) / 1000),
   });
 };
 
@@ -245,4 +244,4 @@ module.exports = {
   crawl: crawl,
   crawlMap: crawlMap,
   crawlReduce: crawlReduce,
-}
+};

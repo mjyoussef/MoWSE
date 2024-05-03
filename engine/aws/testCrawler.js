@@ -59,6 +59,8 @@ if (require.main === module) {
     crawlGroup[distribution.util.id.getSID(node)] = node;
   });
 
+
+
   distribution.node.start((server) => {
     console.log(crawlGroup);
 
@@ -88,6 +90,7 @@ if (require.main === module) {
           }
 
           try {
+            
             const resultsStr = JSON.stringify(results, null, 2);
             fs.writeFileSync("./results.json", resultsStr);
             console.log("Finished crawling!");

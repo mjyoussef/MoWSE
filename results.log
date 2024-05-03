@@ -1,0 +1,199 @@
+{
+  "numPages": 77963,
+  "time": 13.274243290901184,
+  "throughput": 5873.253811269201,
+  "nodes": 2,
+  "iters": 5
+}{
+  "numPages": 79893,
+  "time": 17.746410333156586,
+  "throughput": 4501.924530096746,
+  "nodes": 2,
+  "iters": 5
+}{
+  "numPages": 84004,
+  "time": 14.578713166236877,
+  "throughput": 5762.099784948543,
+  "nodes": 2,
+  "iters": 5
+}{
+  "numPages": 80873,
+  "time": 7.235187250137329,
+  "throughput": 11177.73420424813,
+  "nodes": 3,
+  "iters": 5
+}{
+  "numPages": 83681,
+  "time": 7.313980875015258,
+  "throughput": 11441.238558041134,
+  "nodes": 3,
+  "iters": 5
+}{
+  "numPages": 78387,
+  "time": 6.006802542209625,
+  "throughput": 13049.70480537305,
+  "nodes": 3,
+  "iters": 5
+}{
+  "numPages": 85751,
+  "time": 6.569576791763305,
+  "throughput": 13052.743383335051,
+  "nodes": 3,
+  "iters": 5
+}{
+  "numPages": 81218,
+  "time": 7.64554754114151,
+  "throughput": 10622.91478314107,
+  "nodes": 3,
+  "iters": 5
+}{
+  "numPages": 84161,
+  "time": 14.017316749572753,
+  "throughput": 6004.073497345005,
+  "nodes": 4,
+  "iters": 5
+}{
+  "numPages": 81895,
+  "time": 13.830129583835602,
+  "throughput": 5921.491877828633,
+  "nodes": 4,
+  "iters": 5
+}{
+  "numPages": 84040,
+  "time": 7.225186375141144,
+  "throughput": 11631.533864530697,
+  "nodes": 5,
+  "iters": 5
+}{
+  "numPages": 86710,
+  "time": 13.748332292079926,
+  "throughput": 6306.946774188131,
+  "nodes": 4,
+  "iters": 5
+}{
+  "numPages": 85027,
+  "time": 13.640130833148957,
+  "throughput": 6233.59123457694,
+  "nodes": 4,
+  "iters": 5
+}{
+  "numPages": 83714,
+  "time": 6.487379540920258,
+  "throughput": 12904.131702478575,
+  "nodes": 6,
+  "iters": 5
+}{
+  "numPages": 79092,
+  "time": 4.858864541053772,
+  "throughput": 16277.877131937255,
+  "nodes": 5,
+  "iters": 5
+}{
+  "numPages": 85568,
+  "time": 7.450431208133698,
+  "throughput": 11484.972830375871,
+  "nodes": 6,
+  "iters": 5
+}{
+  "numPages": 83796,
+  "time": 5.440191833019257,
+  "throughput": 15403.13330338831,
+  "nodes": 5,
+  "iters": 5
+}{
+  "numPages": 82743,
+  "time": 11.894979625225067,
+  "throughput": 6956.127930184193,
+  "nodes": 7,
+  "iters": 5
+}{
+  "numPages": 85717,
+  "time": 5.544311084270477,
+  "throughput": 15460.35182679124,
+  "nodes": 7,
+  "iters": 5
+}{
+  "numPages": 81176,
+  "time": 8.325575083732605,
+  "throughput": 9750.197335750452,
+  "nodes": 6,
+  "iters": 5
+}{
+  "numPages": 84335,
+  "time": 6.49667258310318,
+  "throughput": 12981.26062553037,
+  "nodes": 6,
+  "iters": 5
+}{
+  "numPages": 77712,
+  "time": 13.044761415958405,
+  "throughput": 5957.333945941737,
+  "nodes": 4,
+  "iters": 5
+}{
+  "numPages": 47292,
+  "time": 8.147344290733338,
+  "throughput": 5804.590835051513,
+  "nodes": 4,
+  "iters": 5
+}{
+  "numPages": 48188,
+  "time": 7.485893042087555,
+  "throughput": 6437.174526683064,
+  "nodes": 4,
+  "iters": 6
+}{
+  "numPages": 53600,
+  "time": 7.84135870885849,
+  "throughput": 6835.550060915763,
+  "nodes": 8,
+  "iters": 6
+}{
+  "numPages": 88242,
+  "time": 14.426597208023072,
+  "throughput": 6116.619097878876,
+  "nodes": 8,
+  "iters": 5
+}{
+  "numPages": 78305,
+  "time": 4.720053750038147,
+  "throughput": 16589.85345227629,
+  "nodes": 9,
+  "iters": 5
+}{
+  "numPages": 82303,
+  "time": 4.0468849172592165,
+  "throughput": 20337.371010723065,
+  "nodes": 9,
+  "iters": 5
+}{
+  "numPages": 83435,
+  "time": 5.363164667129516,
+  "throughput": 15557.046105887375,
+  "nodes": 11,
+  "iters": 5
+}{
+  "numPages": 79191,
+  "time": 7.884709125041962,
+  "throughput": 10043.617176502825,
+  "nodes": 11,
+  "iters": 5
+}{
+  "numPages": 82867,
+  "time": 5.456147167205811,
+  "throughput": 15187.823469658655,
+  "nodes": 11,
+  "iters": 5
+}{
+  "numPages": 79853,
+  "time": 6.145149582862854,
+  "throughput": 12994.476200007928,
+  "nodes": 7,
+  "iters": 5
+}{
+  "numPages": 85521,
+  "time": 6.029539999961853,
+  "throughput": 14183.66906937197,
+  "nodes": 5,
+  "iters": 5
+}
