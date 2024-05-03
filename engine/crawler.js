@@ -1,6 +1,6 @@
 const fs = require("fs");
-const { performance } = require('perf_hooks');
-const _ = require('lodash');
+const { performance } = require("perf_hooks");
+const _ = require("lodash");
 
 /* Input key = title of page, input value = some metadata.
 `crawlMap` embeds the document, saves the embedding locally, and
@@ -61,13 +61,32 @@ const crawlMap = (title, metadata) => {
               return;
             }
 
-            // get the lowercased words
-            const words = text.match(/\b[\w']+\b/g);
-            const lowerCaseWords = words.map((word) => word.toLowerCase());
+            // Function to filter and lowercase words
+            const filterAndLowercaseWords = (text) => {
+              // Only English lowercase words and apostrophes
+              return text.toLowerCase().match(/\b[a-z']+\b/g) || [];
+            };
+
+            // Process title words
+            const titleWords = filterAndLowercaseWords(title);
+
+            // Split the text into sections
+            const sections = text.split("\n\n");
+            const introWords = filterAndLowercaseWords(sections[0]);
+            const otherSections = sections.slice(1).join(" ");
+            const remainingWords = filterAndLowercaseWords(otherSections);
 
             // embed the document
-            const embed = global.distribution.local.index.embed;
-            const embedding = embed(lowerCaseWords, (e, v) => {}, true);
+            inputs = [
+              [...titleWords, 0.34],
+              [...introWords, 0.33],
+              [...remainingWords, 0.33],
+            ];
+            const embedding = global.distribution.local.index.embed(
+              inputs,
+              (e, v) => {},
+              true
+            );
 
             const links = page.links
               ? page.links.map((link) => link.title)
@@ -126,16 +145,8 @@ const crawlReduce = (title, values) => {
 };
 
 /* Crawler */
-const crawl = async (
-  alpha,
-  beta,
-  gid,
-  titles,
-  maxIters,
-  logging,
-  cb,
-) => {
-  cb = cb || function(e, v) {};
+const crawl = async (alpha, beta, gid, titles, maxIters, logging, cb) => {
+  cb = cb || function (e, v) {};
 
   const start = performance.now();
 
@@ -161,18 +172,21 @@ const crawl = async (
           resolve([]);
           return;
         }
-        
-        /* Prune titles 
-        * If epsilon=len(titles)*alpha is greater than beta, use an epsilon-fraction
-        * of random titles. Otherwise, use beta randomly sampled titles.
-        */
+
+        /* Prune titles
+         * If epsilon=len(titles)*alpha is greater than beta, use an epsilon-fraction
+         * of random titles. Otherwise, use beta randomly sampled titles.
+         */
 
         // shuffle
         let unshuffledTitlesLst = [...titles];
         let titlesLst = _.shuffle(unshuffledTitlesLst);
 
         // prune
-        let spliceIdx = Math.min(titlesLst.length, Math.max(beta, Math.floor(titlesLst.length*alpha)));
+        let spliceIdx = Math.min(
+          titlesLst.length,
+          Math.max(beta, Math.floor(titlesLst.length * alpha))
+        );
         titlesLst = titlesLst.slice(0, spliceIdx);
 
         // create the MapReduce inputs
@@ -217,7 +231,10 @@ const crawl = async (
       let newTitles = await mrIterationPromise;
       newTitles.forEach((title) => uniqueTitles.add(title));
       if (logging) {
-        console.log("Total number of unique extracted URLs: ", uniqueTitles.size);
+        console.log(
+          "Total number of unique extracted URLs: ",
+          uniqueTitles.size
+        );
       }
       titles = newTitles;
 
@@ -245,4 +262,4 @@ module.exports = {
   crawl: crawl,
   crawlMap: crawlMap,
   crawlReduce: crawlReduce,
-}
+};
