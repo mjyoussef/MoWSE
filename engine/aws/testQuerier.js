@@ -32,21 +32,36 @@ if (require.main === module) {
   });
 
   distribution.node.start((server) => {
-    groupsTemplate({ gid: "crawl" }).put("crawl", crawlGroup, (e, v) => {
+    groupsTemplate({ gid: "crawl" }).put("crawl", crawlGroup, async (e, v) => {
       let counter = 0;
       const queryString = "computer science";
       const query = queryString.toLowerCase().split(" ");
       const start = performance.now();
+
       for (let i = 0; i < args.numQueries; i++) {
         distribution.crawl.vecStore.query(query, (e, v) => {
           counter++;
           if (counter == args.numQueries) {
             end = performance.now();
-            console.log(`finished querying in ${end - start}`);
+            console.log(`Throughput: ${args.numQueries / (end - start)}`);
             return;
           }
         });
       }
+
+      const latencyStart = performance.now();
+      for (let i = 0; i < args.numQueries; i++) {
+        const promise = new Promise((resolve, reject) => {
+          distribution.crawl.vecStore.query(query, (e, v) => {
+            resolve(true);
+          });
+        });
+
+        await promise;
+      }
+      const latencyEnd = performance.now();
+
+      console.log(`Latency: ${(latencyEnd - latencyStart) / args.numQueries}`);
     });
   });
 }
