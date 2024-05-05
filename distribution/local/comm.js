@@ -1,6 +1,3 @@
-const http = require("http");
-const serialization = require("../util/serialization");
-
 const comm = {};
 
 /**
@@ -48,7 +45,7 @@ comm.send = (message, remote, cb) => {
     path: `/${remoteService}/${remoteMethod}`,
   };
 
-  const req = http.request(options, (res) => {
+  const req = global.distribution.http.request(options, (res) => {
     let responseData = "";
 
     if (res.statusCode >= 400) {

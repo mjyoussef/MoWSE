@@ -34,9 +34,6 @@ const mr = require("./mr");
 /* vecStore service */
 const vecStore = require("./vecStore");
 
-/* index embedding service */
-const index = require("./index");
-
 module.exports = {
   status: status,
   routes: routes,
@@ -46,5 +43,4 @@ module.exports = {
   store: store,
   mr: mr,
   vecStore: vecStore,
-  index: index,
 };

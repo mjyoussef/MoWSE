@@ -1,4 +1,3 @@
-const id = global.distribution.util.id;
 const config = require("./config.js");
 
 const groups = {};
@@ -68,7 +67,7 @@ groups.put = (groupName, nodes, cb) => {
 groups.add = (groupName, node, cb) => {
   const callback = cb || function (e, v) {};
 
-  const nodeSID = id.getSID(node);
+  const nodeSID = global.distribution.util.id.getSID(node);
   if (!(groupName in groups.nodeGroups)) {
     callback(null, {});
     return;

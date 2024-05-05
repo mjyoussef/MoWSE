@@ -1,15 +1,58 @@
-const index = {};
+const fs = require("fs");
+const path = require("path");
+
+/**
+ * Loads GloVe word embeddings (and stop words).
+ *
+ * @param {string} folderPath - folder containing embeddings.
+ * @param {Function} callback - optional callback that accepts error, value
+ */
+function loadGloVeEmbeddings(folderPath, callback) {
+  try {
+    const embeddings = {};
+    const tfidf = {};
+    const files = fs.readdirSync(folderPath);
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+      const data = fs.readFileSync(filePath, "utf8");
+      const lines = data.split("\n");
+      lines.forEach((line) => {
+        const parts = line.split(" ");
+        const word = parts[0];
+        const embedding = parts.slice(1).map(parseFloat);
+        if (!embeddings[word]) {
+          embeddings[word] = embedding;
+          tfidf[word] = 0;
+        }
+      });
+    });
+
+    // saves embeddings
+    global.distribution.embeddings = embeddings;
+
+    // save the list of stop words
+    const stopwordsLst = fs
+      .readFileSync("./distribution/util/stop.txt", "utf8")
+      .split("\n");
+    global.distribution.stopwords = new Set();
+    stopwordsLst.forEach((word) => {
+      global.distribution.stopwords.add(word);
+    });
+    callback(undefined, true);
+  } catch (error) {
+    callback(new Error(error.message), undefined);
+  }
+}
 
 /**
  * Computes an embedding for a list of list of words, where each group
  * has a weight assigned to it.
  *
  * @param {Array[]} inputs - list of list of words (each group has a weight at the end)
- * @param {Function} callback - optional callback that accepts an error, value
  * @param {boolean} [tfidf=false] - whether to weight words using tf-idf scores
  * @return {number[]} - a vector embedding
  */
-function embed(inputs, callback, tfidf = false) {
+function embed(inputs, tfidf = false) {
   // GloVe embeddings
   let model = global.distribution.embeddings;
 
@@ -95,13 +138,10 @@ function embed(inputs, callback, tfidf = false) {
     }
   }
 
-  if (callback) {
-    callback(undefined, sum);
-  }
-
   return sum;
 }
 
-index.embed = embed;
-
-module.exports = index;
+module.exports = {
+  embed: embed,
+  loadGloVeEmbeddings: loadGloVeEmbeddings,
+};

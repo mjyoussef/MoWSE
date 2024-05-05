@@ -55,7 +55,7 @@ mem.get = (key, root, cb) => {
   }
 
   // traverse the root
-  [error, obj] = traverseMapping(root);
+  [error, obj] = traverseMapping(root, true);
   if (error) {
     if (cb) {
       cb(error, undefined);
@@ -109,7 +109,7 @@ mem.put = (value, key, root, cb) => {
     key = key.key;
   }
 
-  // traverse the root (impossible to return an error w/ createDirs = true)
+  // traverse the root
   [error, obj] = traverseMapping(root, true);
 
   // add the key-value pair

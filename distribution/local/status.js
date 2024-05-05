@@ -70,6 +70,8 @@ status.spawn = (configuration, callback) => {
     newConfig.onStart = new Function(funcStr);
   }
 
+  console.log(newConfig);
+
   const file = path.join(__dirname, "../../", "distribution.js");
   const args = ["--config", serialize(newConfig)];
 

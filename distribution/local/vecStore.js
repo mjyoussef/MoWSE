@@ -1,104 +1,240 @@
-const cosineSim = global.distribution.util.cosineSim;
-const db = require("vectordb");
-const ip = global.nodeConfig.ip;
-const port = global.nodeConfig.port;
+// chroma server's URL
+const chromaUrl = `http://localhost:${global.nodeConfig.chromaPort}`;
+
+// create the client
+const { ChromaClient } = require("chromadb");
+global.chromaClient = new ChromaClient({ path: chromaUrl });
+
+// default collection
+const defaultCollection = "default";
+
+// track buffer sizes for collections
+global.chromaBufferSizes = {
+  default: 0,
+};
+
+// max buffer size
+global.maxBufferSize = 3000;
 
 /**
- * Initializes database.
+ * Resets the database.
  *
- * @param {Function} callback - an optional callback
+ * @param {Function} callback - optional callback that accepts an error, value.
  */
-async function init(callback) {
+async function reset(callback) {
   try {
-    const local_db = await db.connect(`vecStoreData/${ip}:${port}/vectordb`);
-    // names = await local_db.tableNames();
-    // if (!names.includes('vecStore')) {
-    global.distribution.vecStore = await local_db.createTable(
-      "vecStore",
-      [
-        {
-          vector: Array.from({ length: 50 }, () => 0.0),
-          url: "",
-        },
-      ],
-      { writeMode: db.WriteMode.Overwrite }
+    const sid = global.distribution.util.id.getSID(global.nodeConfig);
+
+    // database files
+    const dirPath = global.distribution.path.join(
+      global.distribution.dir,
+      `database/chroma_data/${sid}`
     );
-    global.distribution.vecStore.delete('url = ""');
-    // } else {
-    //   global.distribution.vecStore = await local_db.openTable("vecStore");
-    // }
-    callback(null, "vectorDB initialized successfully");
+    global.distribution.fsExtra.removeSync(dirPath);
+
+    // logs
+    const logPath = global.distribution.path.join(
+      global.distribution.dir,
+      `database/${sid}.log`
+    );
+    global.distribution.fsExtra.removeSync(logPath);
+
+    callback(undefined, true);
   } catch (error) {
-    callback(error, null);
+    callback(new Error(error.message), undefined);
   }
 }
 
 /**
- * Puts a key-value pair in the database.
+ * Creates a new gid collection.
  *
- * @param {Array} key - a vector
- * @param {*} value - the value
- * @param {Function} callback - an optional callback
+ * @param {string} gid - the group ID
+ * @param {Function} callback - optional callback that accepts an error, value.
  */
-async function put(key, value, callback) {
-  const local_db = await db.connect(`vecStoreData/${ip}:${port}/vectordb`);
-  names = await local_db.tableNames();
-  if (!names.includes("vecStore")) {
-    global.distribution.vecStore = await local_db.createTable(
-      "vecStore",
-      [
-        {
-          vector: key,
-          url: value.key,
-        },
-      ],
-      { writeMode: db.WriteMode.Overwrite }
-    );
-    callback(null, "added");
-  } else {
-    // comment out when fully distributed
-    global.distribution.vecStore = await local_db.openTable("vecStore");
-    await global.distribution.vecStore.add([
-      {
-        vector: key,
-        url: value.key,
-      },
-    ]);
-    callback(null, "added");
+async function createGidCollection(gid, callback) {
+  try {
+    const collection = await chromaClient.getOrCreateCollection({
+      name: gid,
+      metadata: { "hnsw:space": "cosine" },
+    });
+
+    callback(undefined, collection);
+  } catch (error) {
+    callback(new Error(error.message), undefined);
+  }
+}
+
+/**
+ * Flushes documents in the buffer to the database.
+ *
+ * @param {string} gid - an optional group ID
+ * @param {Function} callback - optional callback that accepts an error, value.
+ */
+async function flushBuffer(gid, callback) {
+  if (!(gid in global.chromaBufferSizes)) {
+    callback(undefined, 0);
     return;
   }
+
+  const sid = global.distribution.util.id.getSID(global.nodeConfig);
+  const logPath = global.distribution.path.join(
+    global.distribution.dir,
+    `${sid}.log`
+  );
+
+  global.distribution.fs.appendFileSync(
+    logPath,
+    `\nBuffer size: ${global.chromaBufferSizes[gid]}`,
+    "utf8"
+  );
+
+  // get documents from memory
+  global.distribution.local.mem.get(null, [gid], (e, documents) => {
+    if (e) {
+      callback(new Error(e.message), undefined);
+      return;
+    }
+
+    // get each document's embedding
+    const getPromises = [];
+    documents.forEach((document) => {
+      getPromises.push(
+        new Promise((resolve, reject) => {
+          global.distribution.local.mem.get(document, [gid], (e, embedding) => {
+            if (e) {
+              reject(e);
+            } else {
+              resolve([document, embedding]);
+            }
+          });
+        })
+      );
+    });
+
+    // wait for all promises to resolve
+    Promise.all(getPromises)
+      .then(async (entries) => {
+        if (entries.length === 0) {
+          global.chromaBufferSizes[gid] = 0;
+          callback(undefined, entries.length);
+          return;
+        }
+
+        const documents = [];
+        const embeddings = [];
+
+        entries.forEach((entry) => {
+          documents.push(entry[0]);
+          embeddings.push(entry[1]);
+        });
+
+        try {
+          const collection = await chromaClient.getCollection({
+            name: gid,
+            metadata: { "hnsw:space": "cosine" },
+          });
+
+          await collection.upsert({
+            ids: documents,
+            embeddings: embeddings,
+          });
+
+          global.chromaBufferSizes[gid] = 0;
+          callback(undefined, entries.length);
+        } catch (error) {
+          callback(new Error(error.message), undefined);
+        }
+      })
+      .catch((error) => {
+        callback(new Error(error.message), undefined);
+      });
+  });
 }
 
 /**
- * Returns top-k closest vectors to the key.
+ * Puts a document's embedding. The document is temporarily buffered before
+ * being added to the database to make use of batched operations.
  *
- * @param {Array} key - the query vector
- * @param {*} callback - an optional callback
+ * @param {number[]} embedding - the document's vector embedding.
+ * @param {string} document - the ID of the document (ie. Wikipedia title).
+ * @param {string} gid - an optional group ID.
+ * @param {Function} callback - optional callback that accepts an error, value.
  */
-async function query(key, callback) {
-  // comment out when fully distributed
-  const local_db = await db.connect(`vecStoreData/${ip}:${port}/vectordb`);
-  global.distribution.vecStore = await local_db.openTable("vecStore");
-  const results = await global.distribution.vecStore
-    .search(key.key)
-    .limit(key.k)
-    .execute();
-  let topResults = results
-    .map((result) => ({
-      url: result.url,
-      cosineSim: cosineSim(key.key, result.vector),
-    }))
-    .sort((a, b) => a.cosineSim - b.cosineSim);
-  topResults = topResults.reverse();
-  const top = topResults.slice(0, key.k);
-  if (callback) {
-    callback(null, top);
+async function put(embedding, document, gid, callback) {
+  if (!gid) {
+    gid = defaultCollection;
   }
-  return;
+
+  global.distribution.local.mem.put(
+    embedding,
+    document,
+    [gid],
+    async (e, v) => {
+      if (e) {
+        callback(new Error(e.message), undefined);
+        return;
+      }
+
+      // update buffer size
+      if (!(gid in global.chromaBufferSizes)) {
+        global.chromaBufferSizes[gid] = 0;
+      }
+      global.chromaBufferSizes[gid] += 1;
+
+      // flush the buffer if maxBufferSize is reached
+      if (global.chromaBufferSizes[gid] >= global.maxBufferSize) {
+        flushBuffer(gid, (e, v) => {
+          if (e) {
+            callback(new Error(e.message), undefined);
+            return;
+          }
+
+          callback(undefined, true);
+        });
+      } else {
+        // otherwise, return
+        callback(undefined, true);
+      }
+    }
+  );
 }
 
-module.exports = {
-  init: init,
-  put: put,
-  query: query,
-};
+/**
+ * Returns the top-k closest embeddings.
+ *
+ * @param {number[]} embedding - a vector.
+ * @param {string} gid - the group ID.
+ * @param {number} k - choice of k.
+ * @param {Function} callback - optional callback that accepts error, value.
+ */
+async function query(embedding, gid, k, callback) {
+  try {
+    if (!gid) {
+      gid = defaultCollection;
+    }
+
+    const collection = await chromaClient.getCollection({
+      name: gid,
+      metadata: { "hnsw:space": "cosine" },
+    });
+
+    const results = await collection.query({
+      queryEmbeddings: [embedding],
+      nResults: k,
+    });
+
+    callback(undefined, results);
+  } catch (error) {
+    callback(new Error(error.message), undefined);
+  }
+}
+
+const vecStore = {};
+
+vecStore.reset = reset;
+vecStore.createGidCollection = createGidCollection;
+vecStore.flushBuffer = flushBuffer;
+vecStore.put = put;
+vecStore.query = query;
+
+module.exports = vecStore;

@@ -1,4 +1,3 @@
-const fs = require("fs");
 const { performance } = require("perf_hooks");
 const _ = require("lodash");
 
@@ -12,22 +11,23 @@ const crawlMap = (title, metadata) => {
   // if the url has been visited, return nothing
   return new Promise((resolve, reject) => {
     global.distribution.local.mem.get("visited", [], (e, visited) => {
-      // skip
       if (e) {
         visited = new Set();
       }
 
+      // if we've already processed this page, return
       if (visited.has(title)) {
         resolve(undefined);
         return;
       }
 
+      // skip pages w/ non-alphanumeric characters
       if (/[^\w\s]/.test(title)) {
         resolve(undefined);
         return;
       }
 
-      // otherwise, mark it as visited
+      // mark the page as visited
       visited.add(title);
       global.distribution.local.mem.put(visited, "visited", [], (e, v) => {
         const apiUrl = `https://en.wikipedia.org/w/api.php`;
@@ -44,6 +44,7 @@ const crawlMap = (title, metadata) => {
         const queryString = new URLSearchParams(params).toString();
         const sourceURL = `${apiUrl}?${queryString}`;
 
+        // send request to the Wikipedia API
         global.distribution.axios
           .get(sourceURL, {
             headers: {
@@ -56,6 +57,7 @@ const crawlMap = (title, metadata) => {
             // raw text
             const text = page.extract;
 
+            // make sure text is not empty
             if (text === undefined || text === "" || text === null) {
               resolve(undefined);
               return;
@@ -76,14 +78,14 @@ const crawlMap = (title, metadata) => {
             const otherSections = sections.slice(1).join(" ");
             const remainingWords = filterAndLowercaseWords(otherSections);
 
-            // embed the document
+            // embed the document (give greatest weight to title and introduction)
             inputs = [
               [...titleWords, 0.34],
               [...introWords, 0.528],
               [...remainingWords, 0.132],
             ];
 
-            const embedding = global.distribution.local.index.embed(
+            const embedding = global.distribution.util.embed(
               inputs,
               (e, v) => {},
               true
@@ -99,21 +101,23 @@ const crawlMap = (title, metadata) => {
 
             let obj = {};
             obj[title] = filteredLinks;
-            resolve(obj);
 
-            // global.distribution.local.vecStore.put(
-            //   embedding,
-            //   { key: title, gid: gid },
-            //   (e, v) => {
-            //     // if (e) {
-            //     //   resolve(obj);
-            //     //   return;
-            //     // }
-            //     resolve(obj);
-            //   }
-            // );
+            global.distribution.local.vecStore.put(
+              embedding, // embedding
+              title, // document
+              gid, // group ID
+              (e, v) => {
+                if (e) {
+                  console.log(e);
+                  reject(e);
+                  return;
+                }
+                resolve(obj);
+              }
+            );
           })
           .catch((error) => {
+            console.log(error);
             reject(error);
           });
       });
@@ -147,7 +151,6 @@ const crawl = async (alpha, beta, gid, titles, maxIters, logging, cb) => {
   // current MapReduce iteration
   let it = 0;
   while (it < maxIters) {
-    console.log(maxIters);
     it += 1;
     const mrIterationPromise = new Promise((resolve, reject) => {
       global.distribution.local.groups.get(gid, (e, nodes) => {
@@ -225,6 +228,20 @@ const crawl = async (alpha, beta, gid, titles, maxIters, logging, cb) => {
         );
       }
       titles = newTitles;
+
+      // flush buffered documents
+      let flushPromise = new Promise((resolve, reject) => {
+        global.distribution[gid].vecStore.flushBuffer((e, v) => {
+          if (e) {
+            reject(e);
+          } else {
+            resolve(v);
+          }
+        });
+      });
+
+      const flushedResults = await flushPromise;
+      // console.log(flushedResults);
 
       // no more pages to crawl
       if (titles.size === 0) {

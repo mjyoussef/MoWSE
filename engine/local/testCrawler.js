@@ -1,13 +1,6 @@
 const args = require("yargs").argv;
 const crawler = require("../crawler.js");
-const fs = require("fs");
-const AWS = require("aws-sdk");
-const {
-  EC2Client,
-  RunInstancesCommand,
-  DescribeInstancesCommand,
-} = require("@aws-sdk/client-ec2");
-
+const EventEmitter = require("events");
 /*
 EXAMPLE USAGE:
 
@@ -17,7 +10,6 @@ using 4 MapReduce iterations and 3 nodes.
 Optional Flags:
 --alpha (hyperparam for pruning)
 --beta (hyperparam for pruning)
---ec2 (whether to run on EC2 instances)
 */
 
 /* The following code is run when testCrawler.js is run directly */
@@ -41,32 +33,9 @@ if (require.main === module) {
     return;
   }
 
-  if (args.numNodes < 2) {
-    console.error("numNodes must be at least 2.");
+  if (args.numNodes < 1) {
+    console.error("numNodes must be at least 1.");
     return;
-  }
-
-  // deploying
-  if (args.ec2) {
-    if (!args.securityGroupID) {
-      console.error("must provide a security group when deploying.");
-      return;
-    }
-
-    if (!args.accessKeyID) {
-      console.error("must provide access key ID when deploying.");
-      return;
-    }
-
-    if (!args.accessKeySecret) {
-      console.error("must provide access key secret when deploying.");
-      return;
-    }
-
-    if (!args.region) {
-      console.error("must specify region when deploying.");
-      return;
-    }
   }
 
   // optional params
@@ -88,126 +57,103 @@ if (require.main === module) {
 
   // setup the coordinator
   let ip = "127.0.0.1";
-  let basePort = 7110;
-  if (!args.ec2) {
-    global.nodeConfig = { ip: ip, port: basePort };
-    require("../../distribution");
-  }
+  let basePort = 8000;
+  let baseChromaPort = 9000;
 
-  // crawler group
-  const crawlGroup = {};
-  const groupsTemplate = require("../../distribution/all/groups");
+  global.emitter = new EventEmitter();
 
-  const startNodes = async (cb) => {
-    for (let i = 1; i < args.numNodes + 1; i++) {
-      // create the node
-      let node = { ip: ip, port: basePort + i };
-      let sid = distribution.util.id.getSID(node);
-
-      // add it to crawlGroup
-      crawlGroup[sid] = node;
-
-      // spawn promise
-      let spawnPromise = new Promise((resolve, reject) => {
-        distribution.local.status.spawn(node, (e, v) => {
-          resolve(true);
-        });
-      });
-
-      // wait for the promise to resolve
-      try {
-        await spawnPromise;
-      } catch (error) {
-        cb(new Error("Failed to start at least one node."), undefined);
-        return;
-      }
-    }
-
-    cb(undefined, true);
+  global.nodeConfig = {
+    ip: "127.0.0.1",
+    port: 8000,
+    chromaPort: 9000,
+    onStart: () => {
+      global.emitter.emit("ready", true);
+    },
   };
 
-  const startDeployedNodes = async (cb) => {
-    // create the client
-    const ec2 = new EC2Client({ region: args.region });
+  const distribution = require("../../distribution");
 
-    const params = {
-      Filters: [
-        {
-          Name: "instance.group-id",
-          Values: [args.securityGroup],
-        },
-      ],
-    };
+  // wait for GloVe embeddings to load and Chroma server to launch
+  global.emitter.on("ready", (status) => {
+    console.log("Node started!");
 
-    try {
-      const data = await ec2.send(new DescribeInstancesCommand(params));
+    // crawler group
+    const crawlGroup = {};
+    const groupsTemplate = require("../../distribution/all/groups");
 
-      data.Reservations.forEach((reservation) => {
-        reservation.Instances.forEach((instance) => {
-          let node = {
-            ip: instance.PublicIpAddress,
-            port: global.nodeConfig.port,
-          };
-          let sid = distribution.util.id.getSID(node);
+    const startNodes = async (cb) => {
+      for (let i = 1; i < args.numNodes + 1; i++) {
+        // create the node
+        let node = {
+          ip: ip,
+          port: basePort + i,
+          chromaPort: baseChromaPort + i,
+        };
+        let sid = distribution.util.id.getSID(node);
 
-          // add to the crawl group
-          crawlGroup[sid] = node;
+        // add it to crawlGroup
+        crawlGroup[sid] = node;
+
+        // spawn promise
+        let spawnPromise = new Promise((resolve, reject) => {
+          distribution.local.status.spawn(node, (e, v) => {
+            resolve(true);
+          });
         });
-      });
+
+        // wait for the promise to resolve
+        try {
+          await spawnPromise;
+        } catch (error) {
+          cb(new Error("Failed to start at least one node."), undefined);
+          return;
+        }
+      }
 
       cb(undefined, true);
-    } catch (error) {
-      cb(new Error(error.message), undefined);
-      return;
-    }
-  };
-
-  global.distribution.node.start((server) => {
-    let startFn = startNodes;
-    if (args.ec2) {
-      startFn = startDeployedNodes;
-    }
+    };
 
     startNodes((e, v) => {
-      // add the nodes to the crawl group
-      console.log(e, v);
       console.log(crawlGroup);
 
       if (e) {
-        console.error("ERROR:", e);
+        console.error("ERROR: ", e);
         return;
       }
+
       groupsTemplate({ gid: "crawl" }).put("crawl", crawlGroup, (e, v) => {
         if (Object.keys(e).length > 0) {
           console.error("Failed to start at least one node.");
           return;
         }
 
-        // begin crawling
-        crawler.crawl(
-          alpha, // alpha
-          beta, // beta
-          "crawl", // gid
-          ["Computer Science"], // titles
-          args.maxIters, // maxIters
-          true, // log results to terminal
-          (e, results) => {
-            if (e) {
-              console.error("Unexpected error during MapReduce: ", e);
-              return;
-            }
-
-            try {
-              results.nodes = args.numNodes;
-              results.iters = args.maxIters;
-              const resultsStr = JSON.stringify(results, null, 2);
-              fs.writeFileSync("./results.json", resultsStr);
-              console.log("Finished crawling!");
-            } catch (error) {
-              console.error("Failed to write results to ./outputs.json");
-            }
+        // create the collection
+        global.distribution.crawl.vecStore.createGidCollection((e, v) => {
+          if (e) {
+            console.log(e);
+            return;
           }
-        );
+
+          console.log("Ready to crawl!");
+
+          // begin crawling!
+          crawler.crawl(
+            alpha, // alpha
+            beta, // beta
+            "crawl", // gid
+            ["Computer Science"], // starting pages
+            args.maxIters, // max MapReduce iterations
+            true, // logging
+            async (e, results) => {
+              if (e) {
+                console.log(e);
+                return;
+              }
+
+              console.log(results);
+            }
+          );
+        });
       });
     });
   });
