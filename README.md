@@ -1,8 +1,8 @@
 # README
 
-**MoWSe** (Mean of Words Search) is a scalable search engine that leverages event-driven, asynchronous processing and distributed MapReduce workflows. On just a single machine, MoWSe is capable of crawling and indexing tens of thousands of pages and executing queries in a few milliseconds.
+**MoWSe** (Mean of Words Search) is a lightweight, scalable search engine that leverages event-driven, asynchronous processing and distributed MapReduce workflows. On just a single machine, MoWSe is capable of crawling and indexing tens of thousands of pages and executing queries in just a few milliseconds!
 
-Under the hood, pages are embedded using a tf-idf-weighted average of the GloVe embeddings of the page's words. Page embeddedings are stored in a distributed vector store that quantizes and indexes those vectors to minimize memory usage and reduce query latency.
+Under the hood, pages are embedded using a tf-idf-weighted average of the GloVe embeddings of the page's words, and they are stored in a distributed vector database that quantizes and indexes those vectors to minimize memory usage and reduce query latency.
 
 ## Setup
 
