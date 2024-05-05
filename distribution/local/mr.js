@@ -1,6 +1,6 @@
-const store = require("./store");
-const groups = require("./groups");
-const comm = require("./comm");
+const store = require('./store');
+const groups = require('./groups');
+const comm = require('./comm');
 
 const mr = {};
 
@@ -19,98 +19,103 @@ mr.map = (args, cb) => {
         hash: function,
     }
     */
-  cb = cb || function () {};
+  cb = cb || function() {};
 
   // collect the input key-value pairs for map
   store.get(
-    { key: null, gid: args.gid },
-    [args.mrid, "map"],
-    async (e, keyValPairs) => {
-      if (e) {
-        cb(undefined, true);
-        return;
-      }
-
-      // run map computation on each key-value pair
-      const mapPromises = [];
-      for (let i = 0; i < keyValPairs.length; i++) {
-        const pair = keyValPairs[i];
-        const mapInputKey = Object.keys(pair)[0];
-        const mapInputValue = pair[mapInputKey];
-        mapPromises.push(args.mapFn(mapInputKey, mapInputValue));
-      }
-
-      const mapResults = (await Promise.all(mapPromises)).flat();
-
-      // after collecting map results, send to appropriate reducers
-      groups.get(args.gid, (e, nodes) => {
+      {key: null, gid: args.gid},
+      [args.mrid, 'map'],
+      async (e, keyValPairs) => {
         if (e) {
-          cb(new Error("Error: failed groups.get"), undefined);
+          cb(undefined, true);
           return;
         }
 
-        // find which reducers get which key-value pairs
-        const reducersMap = {};
-        for (let i = 0; i < mapResults.length; i++) {
-          let pair = mapResults[i];
-          if (pair === null || pair === undefined) {
-            continue;
-          }
-          let reduceInputKey = Object.keys(pair)[0];
-          let reduceInputKid =
+        // run map computation on each key-value pair
+        const mapPromises = [];
+        for (let i = 0; i < keyValPairs.length; i++) {
+          const pair = keyValPairs[i];
+          const mapInputKey = Object.keys(pair)[0];
+          const mapInputValue = pair[mapInputKey];
+          mapPromises.push(args.mapFn(mapInputKey, mapInputValue));
+        }
+
+        try {
+          const mapResults = (await Promise.all(mapPromises)).flat();
+
+          // after collecting map results, send to appropriate reducers
+          groups.get(args.gid, (e, nodes) => {
+            if (e) {
+              cb(new Error('Error: failed groups.get'), undefined);
+              return;
+            }
+
+            // find which reducers get which key-value pairs
+            const reducersMap = {};
+            for (let i = 0; i < mapResults.length; i++) {
+              let pair = mapResults[i];
+              if (pair === null || pair === undefined) {
+                continue;
+              }
+              let reduceInputKey = Object.keys(pair)[0];
+              let reduceInputKid =
             global.distribution.util.id.getID(reduceInputKey);
-          let nid = global.distribution.util.id[args.hash](
-            reduceInputKid,
-            Object.keys(nodes)
-          );
+              let nid = global.distribution.util.id[args.hash](
+                  reduceInputKid,
+                  Object.keys(nodes),
+              );
 
-          // update the node's list of key-value pairs
-          let nidPairs = reducersMap[nid] || [];
-          nidPairs.push(pair);
-          reducersMap[nid] = nidPairs;
-        }
+              // update the node's list of key-value pairs
+              let nidPairs = reducersMap[nid] || [];
+              nidPairs.push(pair);
+              reducersMap[nid] = nidPairs;
+            }
 
-        // send requests (to mr.append) to each reducer
-        const appendPromises = [];
-        for (const nid in reducersMap) {
-          appendPromises.push(
-            new Promise((resolve, reject) => {
-              const remote = {
-                node: nodes[nid],
-                service: "mr",
-                method: "append",
-              };
-              const appendArgs = {
-                gid: args.gid,
-                mrid: args.mrid,
-                items: reducersMap[nid],
-              };
-              comm.send([appendArgs], remote, (e, v) => {
-                if (e) {
-                  reject(e);
-                } else {
-                  resolve(v);
-                }
-              });
-            })
-          );
-        }
+            // send requests (to mr.append) to each reducer
+            const appendPromises = [];
+            for (const nid in reducersMap) {
+              appendPromises.push(
+                  new Promise((resolve, reject) => {
+                    const remote = {
+                      node: nodes[nid],
+                      service: 'mr',
+                      method: 'append',
+                    };
+                    const appendArgs = {
+                      gid: args.gid,
+                      mrid: args.mrid,
+                      items: reducersMap[nid],
+                    };
+                    comm.send([appendArgs], remote, (e, v) => {
+                      if (e) {
+                        reject(e);
+                      } else {
+                        resolve(v);
+                      }
+                    });
+                  }),
+              );
+            }
 
-        // if all requests were successful, notify the coordinator
-        Promise.all(appendPromises)
-          .then((results) => {
-            cb(undefined, true);
-          })
-          .catch((error) => {
-            // otherwise, return an error if at least one fails
-            cb(
-              new Error("Error forwarding map results to reducers"),
-              undefined
-            );
+            // if all requests were successful, notify the coordinator
+            Promise.all(appendPromises)
+                .then((results) => {
+                  cb(undefined, true);
+                })
+                .catch((error) => {
+                  // otherwise, return an error if at least one fails
+                  cb(
+                      new Error('Error forwarding map results to reducers'),
+                      undefined,
+                  );
+                });
           });
-      });
-    },
-    true
+        } catch (error) {
+          console.log(error);
+          cb(new Error('Map function errored!'), undefined);
+        }
+      },
+      true,
   );
 };
 
@@ -128,46 +133,46 @@ mr.reduce = (args, cb) => {
         reduceFn: function,
     }
   */
-  cb = cb || function () {};
+  cb = cb || function() {};
 
   // check if the directory exists; if not, this node is not
   // a reducer, so return an empty result
-  if (!store.checkdir([args.mrid, "reduce"], args.gid)) {
+  if (!store.checkdir([args.mrid, 'reduce'], args.gid)) {
     cb(undefined, undefined);
     return;
   }
 
   // get all of the input keys for reduce (stored under {mrid}/reduce)
   store.get(
-    { key: null, gid: args.gid },
-    [args.mrid, "reduce"],
-    (e, keyValPairs) => {
-      if (e) {
-        cb(new Error("Error getting input keys for reducer"), undefined);
-        return;
-      }
+      {key: null, gid: args.gid},
+      [args.mrid, 'reduce'],
+      (e, keyValPairs) => {
+        if (e) {
+          cb(new Error('Error getting input keys for reducer'), undefined);
+          return;
+        }
 
-      const reducePromises = [];
-      for (let i = 0; i < keyValPairs.length; i++) {
-        const pair = keyValPairs[i];
-        const reduceInputKey = Object.keys(pair)[0];
-        let reduceInputValues = pair[reduceInputKey];
-        reduceInputValues = Array.isArray(reduceInputValues)
-          ? reduceInputValues
-          : [reduceInputValues];
-        const reducePromise = args.reduceFn(reduceInputKey, reduceInputValues);
-        reducePromises.push(reducePromise);
-      }
+        const reducePromises = [];
+        for (let i = 0; i < keyValPairs.length; i++) {
+          const pair = keyValPairs[i];
+          const reduceInputKey = Object.keys(pair)[0];
+          let reduceInputValues = pair[reduceInputKey];
+          reduceInputValues = Array.isArray(reduceInputValues) ?
+          reduceInputValues :
+          [reduceInputValues];
+          const reducePromise = args.reduceFn(reduceInputKey, reduceInputValues);
+          reducePromises.push(reducePromise);
+        }
 
-      Promise.all(reducePromises)
-        .then((reduceResults) => {
-          cb(undefined, reduceResults);
-        })
-        .catch((error) => {
-          cb(new Error("At least one reducer failed"), undefined);
-        });
-    },
-    true
+        Promise.all(reducePromises)
+            .then((reduceResults) => {
+              cb(undefined, reduceResults);
+            })
+            .catch((error) => {
+              cb(new Error('At least one reducer failed'), undefined);
+            });
+      },
+      true,
   );
 };
 
@@ -186,7 +191,7 @@ mr.append = (args, cb) => {
     }
     */
 
-  cb = cb || function () {};
+  cb = cb || function() {};
 
   const promises = [];
   for (let i = 0; i < args.items.length; i++) {
@@ -197,17 +202,17 @@ mr.append = (args, cb) => {
     const value = item[key];
 
     // each key is a file under {args.mrid}/reduce/
-    const root = [args.mrid, "reduce"];
+    const root = [args.mrid, 'reduce'];
     promises.push(
-      new Promise((resolve, reject) => {
-        store.put(value, { key: key, gid: args.gid }, root, (e, v) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve(true);
-          }
-        });
-      })
+        new Promise((resolve, reject) => {
+          store.put(value, {key: key, gid: args.gid}, root, (e, v) => {
+            if (e) {
+              reject(e);
+            } else {
+              resolve(true);
+            }
+          });
+        }),
     );
   }
 
@@ -215,15 +220,15 @@ mr.append = (args, cb) => {
   // is returned w/ results being undefined (may want to change
   // this behavior)
   Promise.all(promises)
-    .then((results) => {
-      cb(undefined, true);
-    })
-    .catch((error) => {
-      cb(
-        new Error("Local.mr.append failed to store a key-value pair"),
-        undefined
-      );
-    });
+      .then((results) => {
+        cb(undefined, true);
+      })
+      .catch((error) => {
+        cb(
+            new Error('Local.mr.append failed to store a key-value pair'),
+            undefined,
+        );
+      });
 };
 
 module.exports = mr;
