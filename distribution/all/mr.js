@@ -3,18 +3,22 @@ const mr = function (config) {
   const hash = config.hash || "naiveHash";
 
   return {
+    /**
+     * MapReduce, using the current node as the coordinator.
+     *
+     * @param {Object} args - contains mrid, map/reduce functions, and optional inputs
+     * @param {Function} cb - an optional callback that accepts an error and value
+     */
     exec: (args, cb) => {
       /*
       args = {
         mrid: string,
         mapFn: function,
         reduceFn: function,
-        inputs: (optional); a list of key-val pairs to store before
-        beginning MapReduce
+        inputs: (optional); a list of key-val pairs to use
       }
       */
-
-      cb = cb || function () {};
+      cb = cb || function (e, v) {};
 
       global.distribution.local.groups.get(gid, async (e, nodes) => {
         if (e) {

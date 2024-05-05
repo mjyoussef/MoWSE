@@ -1,10 +1,15 @@
-const http = require('http');
-const serialize = global.distribution.util.serialize;
-const deserialize = global.distribution.util.deserialize;
-
 const comm = {};
 
+/**
+ * Invokes a service / method on a node.
+ *
+ * @param {Array} message - list of arguments
+ * @param {Object} remote - contains address, service, and method names
+ * @param {Function} cb - optional callback that accepts error, value
+ */
 comm.send = (message, remote, cb) => {
+  cb = cb || function (e, v) {};
+
   var remoteService = undefined;
   var remoteMethod = undefined;
   var remoteNode = undefined;
@@ -24,24 +29,24 @@ comm.send = (message, remote, cb) => {
     remoteMethod === undefined ||
     remoteNode === undefined
   ) {
-    const e = new Error('remote node is invalid');
+    const e = new Error("remote node is invalid");
     if (cb) {
       cb(e, undefined);
     }
     return;
   }
 
-  const data = serialize(message);
+  const data = global.distribution.util.serialize(message);
 
   const options = {
-    method: 'PUT',
+    method: "PUT",
     host: remoteNode.ip,
     port: remoteNode.port,
     path: `/${remoteService}/${remoteMethod}`,
   };
 
-  const req = http.request(options, (res) => {
-    let responseData = '';
+  const req = global.distribution.http.request(options, (res) => {
+    let responseData = "";
 
     if (res.statusCode >= 400) {
       const e = new Error(`error sending message: ${res.statusCode}`);
@@ -49,14 +54,15 @@ comm.send = (message, remote, cb) => {
       return;
     }
 
-    res.on('data', (chunk) => {
+    res.on("data", (chunk) => {
       responseData += chunk.toString();
     });
 
-    res.on('end', () => {
+    res.on("end", () => {
       // Handle the response data
       // console.log(responseData);
-      const deserializedData = deserialize(responseData);
+      const deserializedData =
+        global.distribution.util.deserialize(responseData);
       if (deserializedData instanceof Error) {
         cb(deserializedData, undefined);
         return;
@@ -66,7 +72,7 @@ comm.send = (message, remote, cb) => {
     });
   });
 
-  req.on('error', (error) => {
+  req.on("error", (error) => {
     // Handle errors
     if (cb) {
       cb(new Error(error.message), undefined);

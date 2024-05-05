@@ -1,12 +1,16 @@
-// mapping mimicks a filesystem
-// each "level" of mapping has a dedicated 'subdirs' field
-// that stores subdirectories
 const mapping = {
   subdirs: {},
 };
 
 const mem = {};
 
+/**
+ * Gets the folder specified by a directory path.
+ *
+ * @param {string[]} root - the directory path
+ * @param {boolean} createDirs - whether or not to create directories along the traversal
+ * @return {Array} - returns an (optional) error and the folder
+ */
 function traverseMapping(root, createDirs) {
   let error = undefined;
   let obj = mapping;
@@ -34,7 +38,16 @@ function traverseMapping(root, createDirs) {
   return [error, obj];
 }
 
+/**
+ * Gets a value from memory.
+ *
+ * @param {string} key - the key
+ * @param {string[]} root - directory path
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mem.get = (key, root, cb) => {
+  cb = cb || function (e, v) {};
+
   // add the group to root
   if (key !== null && typeof key === 'object') {
     root.push(key.gid);
@@ -42,7 +55,7 @@ mem.get = (key, root, cb) => {
   }
 
   // traverse the root
-  [error, obj] = traverseMapping(root);
+  [error, obj] = traverseMapping(root, true);
   if (error) {
     if (cb) {
       cb(error, undefined);
@@ -80,14 +93,23 @@ mem.get = (key, root, cb) => {
   }
 };
 
+/**
+ * Puts a key-value pair in memory.
+ *
+ * @param {*} value - the value
+ * @param {string} key - the key
+ * @param {string[]} root - directory path
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mem.put = (value, key, root, cb) => {
+  cb = cb || function (e, v) {};
   // add the group to root
   if (key !== null && typeof key === 'object') {
     root.push(key.gid);
     key = key.key;
   }
 
-  // traverse the root (impossible to return an error w/ createDirs = true)
+  // traverse the root
   [error, obj] = traverseMapping(root, true);
 
   // add the key-value pair
@@ -98,7 +120,15 @@ mem.put = (value, key, root, cb) => {
   }
 };
 
+/**
+ * Deletes a key from memory.
+ *
+ * @param {string} key - the key
+ * @param {string[]} root - directory path
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mem.del = (key, root, cb) => {
+  cb = cb || function (e, v) {};
   // add the group to root
   if (key !== null && typeof key === 'object') {
     root.push(key.gid);

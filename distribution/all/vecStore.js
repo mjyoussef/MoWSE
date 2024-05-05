@@ -1,92 +1,157 @@
-const util = global.distribution.util;
-const local = global.distribution.local;
-
-function sendToNode(gid, hash, nodes, method, key, optionalArgs, cb) {
-  const kid = util.id.getID(key);
-  const nid = hash(kid, Object.keys(nodes));
-
-  // arguments
-  const args = optionalArgs || [];
-  args.push({key: key, gid: gid});
-
-  // remote
-  const remote = {
-    node: nodes[nid],
-    service: 'vecStore',
-    method: method,
-  };
-
-  local.comm.send(args, remote, cb);
-}
-
 const vecStore = (config) => {
-  const gid = config.gid || 'all';
-  const hash = config.hash || util.id.naiveHash;
+  const gid = config.gid || "all";
+  const hash = config.hash || "naiveHash";
 
   return {
-    put: (key, value, cb) => {
-      if (key === null) {
-        key = util.id.getID(value);
-      }
-      local.groups.get(gid, (e, nodes) => {
-        if (e) {
-          if (cb) {
-            cb(new Error('Error from all.vecStore.put: failed to get nodes in gid'), undefined);
-          }
+    /**
+     * Resets databases.
+     *
+     * @param {Function} callback - an optional callback that accepts error, value
+     */
+    reset: (callback) => {
+      const args = [];
+      const remote = {
+        service: "vecStore",
+        method: "reset",
+      };
+      global.distribution[gid].comm.send(args, remote, (e, v) => {
+        if (Object.keys(e).length !== 0) {
+          callback(new Error(e.message), undefined);
           return;
         }
-        sendToNode(gid, hash, nodes, 'put', key, [value], cb);
+        callback(undefined, true);
       });
     },
-    query: (key, cb, k=5) => {
-      // replace with a MR framework
-      console.log('querying');
-      // console.log(JSON.stringify(key));
-      const embedded_query = local.index.embed(key);
-      // console.log(embedded_query);
-      local.groups.get(gid, (e, nodes) => {
+
+    /**
+     * Creates a gid collection in each node's vector store.
+     *
+     * @param {string} gid - the group ID
+     * @param {Function} callback - optional callback that accepts error, value
+     */
+    createGidCollection: (callback) => {
+      const args = [gid];
+      const remote = {
+        service: "vecStore",
+        method: "createGidCollection",
+      };
+      global.distribution[gid].comm.send(args, remote, (e, v) => {
+        if (Object.keys(e).length !== 0) {
+          callback(
+            new Error("Failed to create collection in at least one node."),
+            undefined
+          );
+          return;
+        }
+        callback(undefined, true);
+      });
+    },
+
+    /**
+     * Flushes buffered documents into their databases.
+     *
+     * @param {Function} callback - an optional callback function that accepts error, value.
+     */
+    flushBuffer: (callback) => {
+      const args = [gid];
+      const remote = {
+        service: "vecStore",
+        method: "flushBuffer",
+      };
+      global.distribution[gid].comm.send(args, remote, (e, v) => {
+        if (Object.keys(e).length !== 0) {
+          console.log(e);
+          callback(
+            new Error("Failed to flush buffer in at least one node."),
+            undefined
+          );
+          return;
+        }
+        callback(undefined, v);
+      });
+    },
+
+    /**
+     * Puts a document in each node's local vector store.
+     *
+     * @param {number[]} embedding - the document's embedding.
+     * @param {string} document - the name of the document.
+     * @param {Function} callback - an optional callback function that accepts error, value.
+     */
+    put: (embedding, document, callback) => {
+      global.distribution.local.groups.get(gid, (e, nodes) => {
         if (e) {
-          if (cb) {
-            cb(new Error('Error from all.vecStore.query: failed to get nodes in gid'), undefined);
-          }
+          callback(new Error(e.message), undefined);
           return;
         }
 
-        const promises = [];
-        for (const nid in nodes) {
-          const remote = {
-            node: nodes[nid],
-            service: 'vecStore',
-            method: 'query',
-          };
-
-          promises.push(new Promise((resolve, reject) => {
-            local.comm.send([{key: embedded_query, k: k}], remote, (e, v) => {
-              if (e) {
-                resolve([]);
-              } else {
-                resolve(v);
-              }
-            });
-          }));
-        }
-        Promise.all(promises).then((results) => {
-          results = results.flat();
-          results.sort((a, b) => {
-            return a.cosineSim - b.cosineSim;
-          });
-          results = results.reverse();
-          results = results.slice(0, k);
-          results = results.map((result) => result.url);
-          if (cb) {
-            cb(undefined, results);
+        const kid = global.distribution.util.id.getID(document);
+        const sid = global.distribution.util.id[hash](kid, Object.keys(nodes));
+        const args = [embedding, document, gid];
+        const remote = {
+          node: nodes[sid],
+          service: "vecStore",
+          method: "put",
+        };
+        global.distribution.local.comm.send(args, remote, (e, v) => {
+          if (Object.keys(e).length !== 0) {
+            callback(new Error(e.message), undefined);
+            return;
           }
-        }).catch((error) => {
-          if (cb) {
-            cb(new Error('Error from all.vecStore.query: failed to resolve promises: ', error), undefined);
-          }
+          callback(undefined, true);
         });
       });
+    },
+
+    /**
+     * Returns top-k closest documents to the query embedding.
+     *
+     * @param {number[]} embedding - the query embedding.
+     * @param {number} k - the choice of k.
+     * @param {Function} callback - an optional callback that accepts error, value.
+     */
+    query: (embedding, k, callback) => {
+      const args = [embedding, gid, k];
+      const remote = {
+        service: "vecStore",
+        method: "query",
+      };
+      global.distribution[gid].comm.send(
+        args,
+        remote,
+        (e, intermediateResults) => {
+          if (Object.keys(e).length !== 0) {
+            callback(new Error(e.message), undefined);
+            return;
+          }
+
+          const documents = [];
+          Object.entries(intermediateResults).forEach(([sid, result]) => {
+            for (let i = 0; i < result.ids.length; i++) {
+              const documentID = result.ids[i];
+              const distance = result.distances[i];
+              documents.push([documentID, distance]);
+            }
+          });
+
+          // sort documents by distance
+          documents.sort((d1, d2) => d1[1] - d2[1]);
+
+          // JSON output
+          const output = {
+            ids: [],
+            distances: [],
+          };
+
+          for (let i = 0; i < Math.min(k, documents.length); i++) {
+            const elt = documents[i];
+            output.ids.push(elt[0]); // id
+            output.distances.push(elt[1]); // distance to query embedding
+          }
+
+          callback(undefined, output);
+        }
+      );
     },
   };
 };

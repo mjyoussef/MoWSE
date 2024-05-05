@@ -4,6 +4,12 @@ const comm = require('./comm');
 
 const mr = {};
 
+/**
+ * Computes map results and forwards to reducers
+ *
+ * @param {Object} args - the gid, mrid, map function, hash function
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mr.map = (args, cb) => {
   /*
     args = {
@@ -113,6 +119,12 @@ mr.map = (args, cb) => {
   );
 };
 
+/**
+ * Reduces and return
+ *
+ * @param {Object} args - the gid, mrid, reduce function
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mr.reduce = (args, cb) => {
   /*
     args = {
@@ -164,6 +176,12 @@ mr.reduce = (args, cb) => {
   );
 };
 
+/**
+ * Stores a list of key-value pairs for reducing.
+ *
+ * @param {Object} args - the gid, mrid, list of key-value pairs
+ * @param {Function} cb - an optional callback that accepts error, value
+ */
 mr.append = (args, cb) => {
   /*
     args = {
