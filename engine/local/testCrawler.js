@@ -10,6 +10,8 @@ using 4 MapReduce iterations and 3 nodes.
 Optional Flags:
 --alpha (hyperparam for pruning)
 --beta (hyperparam for pruning)
+--persist (whether or not to use existing database files; this flag
+  does NOT accept a boolean parameter)
 */
 
 /* The following code is run when testCrawler.js is run directly */
@@ -41,6 +43,7 @@ if (require.main === module) {
   // optional params
   let alpha = 0.001;
   let beta = 500;
+  let persist = false;
 
   if (args.alpha) {
     alpha = args.alpha;
@@ -48,6 +51,10 @@ if (require.main === module) {
 
   if (args.beta) {
     beta = args.beta;
+  }
+
+  if (args.persist) {
+    persist = true;
   }
 
   /* CRAWLING
@@ -66,6 +73,7 @@ if (require.main === module) {
     ip: "127.0.0.1",
     port: 8000,
     chromaPort: 9000,
+    persist: persist,
     onStart: () => {
       global.emitter.emit("ready", true);
     },
@@ -87,6 +95,7 @@ if (require.main === module) {
         let node = {
           ip: ip,
           port: basePort + i,
+          persist: persist,
           chromaPort: baseChromaPort + i,
         };
         let sid = distribution.util.id.getSID(node);

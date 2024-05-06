@@ -9,6 +9,7 @@ global.nodeConfig = global.nodeConfig || {
   ip: "127.0.0.1",
   port: 8000,
   chromaPort: 9000,
+  persist: false,
   onStart: () => {
     console.log("Node started!");
   },
@@ -19,7 +20,7 @@ global.nodeConfig = global.nodeConfig || {
   This is just to allow for you to easily startup nodes from the terminal.
 
   Usage:
-  ./distribution.js --ip '127.0.0.1' --port 1234 --chromaPort 7777
+  ./distribution.js --ip '127.0.0.1' --port 1234 --chromaPort 7777 --persist
 */
 if (args.ip) {
   global.nodeConfig.ip = args.ip;
@@ -33,6 +34,10 @@ if (args.chromaPort) {
   global.nodeConfig.chromaPort = parseInt(args.chromaPort);
 }
 
+if (args.persist) {
+  global.nodeConfig.persist = true;
+}
+
 if (args.config) {
   let nodeConfig = util.deserialize(args.config);
   global.nodeConfig.ip = nodeConfig.ip ? nodeConfig.ip : global.nodeConfig.ip;
@@ -42,6 +47,11 @@ if (args.config) {
   global.nodeConfig.chromaPort = nodeConfig.chromaPort
     ? nodeConfig.chromaPort
     : global.nodeConfig.chromaPort;
+
+  global.nodeConfig.persist = nodeConfig.persist
+    ? nodeConfig.persist
+    : global.nodeConfig.persist;
+
   global.nodeConfig.onStart = nodeConfig.onStart
     ? nodeConfig.onStart
     : global.nodeConfig.onStart;
@@ -173,8 +183,7 @@ global.distribution.util.loadGloVeEmbeddings(
     } else {
       console.log("Successfully loaded GloVe word embeddings!");
 
-      // clear database files (if they exists)
-      global.distribution.local.vecStore.reset((e, v) => {
+      const launchChroma = (e, v) => {
         if (e) {
           console.log("Failed to reset database: ", e);
           return;
@@ -203,7 +212,17 @@ global.distribution.util.loadGloVeEmbeddings(
           console.log(error);
           return;
         }
-      });
+      };
+
+      if (global.nodeConfig.persist) {
+        launchChroma(undefined, undefined);
+        return;
+      }
+
+      console.log(global.nodeConfig.persist);
+
+      // if not persisting, clear database files (if they exists)
+      global.distribution.local.vecStore.reset(launchChroma);
     }
   }
 );
